@@ -61,5 +61,27 @@ The following cmake arguments are available when compiling:
 - `RETRO_MOD_LOADER_VER`: Manually sets the mod loader version. Takes an integer, defaults to the current latest version.
 - `RETRO_SUBSYSTEM`: *Only change this if you know what you're doing.* Changes the subsystem that RSDKv5 will be built for. Defaults to the most standard subsystem for the platform.
 
+# Getting this to work on custom interfaces
+To get this web port to work, you need to change your CORS policy on how you serve the port itself, that being your own interface. This is required as libtheora/theoraplay requires multiple threads to work, this is an issue as modern browsers **WILL BLOCK MULTI-THREADING BY DEFAULT.** If you dont the port will not launch, so don't open an issue saying that the port wont open, as most likely you forgot to set the required http response headers: 
+```http
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: require-corp
+```
+You might be asking, "HOW TF AM I SUPPOSED TO DO THIS???????"
+If so here are some simple solutions:
+
+## Setting these in whatever interface you're using to launch the port (whether that be custom or by using the RSDK-Library Manager)
+Since you're using a custom interface, it is still **STUPID** easy to setup.
+
+All *you* need to do is to get this: https://raw.githubusercontent.com/gzuidhof/coi-serviceworker/refs/heads/master/coi-serviceworker.js (right-click the link and click on Save As... ), and drop it in the root directory where you are launching the port, and set this where your ```<head>``` of the .html file you're using to launch the port itself (aka where you're launching the RSDKv3.js/.wasm files):
+
+```html
+<head>
+    <script src="coi-serviceworker.js"></script>
+    <!-- Your other meta tags and scripts go here -->
+</head>
+```
+and after that, you're good to go!
+
 # Contact:
 Join the [Retro Engine Modding Discord Server](https://dc.railgun.works/retroengine) for any extra questions you may need to know about the decompilation or modding it.
