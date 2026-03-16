@@ -9,14 +9,13 @@ precision highp float;
 in_F vec2 ex_UV;
 in_F vec4 ex_color;
 
-uniform sampler2D texDiffuse; // screen display texture
-
-uniform vec2 pixelSize;   // internal game resolution 
-uniform vec2 textureSize; // size of the internal framebuffer texture
-uniform vec2 viewSize;    // window viewport size
+uniform sampler2D texDiffuse;
+uniform vec2 pixelSize;   
+uniform vec2 textureSize; 
+uniform vec2 viewSize;    
 
 #if RETRO_REV02  
-uniform float screenDim;  // screen dimming percent
+uniform float screenDim;  
 #endif
 
 // =======================
@@ -24,8 +23,6 @@ uniform float screenDim;  // screen dimming percent
 // =======================
 #define viewSizeHD  720.0                   
 #define brightness  1.25                    
-
-// NOTE: The 'intencity' vec3 was removed here to prevent the red WebGL banding!
 
 void main()
 {
@@ -40,6 +37,17 @@ void main()
     power.x = pow(2.0, pow(exp.y, 2.0) * -8.0);
     power.y = pow(2.0, pow(-1.0 - exp.y, 2.0) * -8.0);
     power.z = pow(2.0, pow(1.0 - exp.y, 2.0) * -8.0);
+
+    // RESTORED FIX: Calculate the shadow mask grid position
+    vec2 viewPos        = floor(texelPos.xy * viewSize.xy) + 0.5;
+    float intencityPos  = fract((viewPos.y * 3.0 + viewPos.x) * (1.0 / 6.0));
+
+    // Create a Grayscale mask instead of an RGB mask to prevent red banding!
+    float maskWeight;
+    if (intencityPos < (1.0 / 3.0))
+        maskWeight = 1.2;
+    else 
+        maskWeight = 0.9;
 
     vec3 color1  = texture2D(texDiffuse, (floor(size.zw * textureSize.xy   + vec2( 1.0, -1.0))   + 0.5)      / textureSize.xy).rgb * factor.y * brightness;
     vec3 color2  = texture2D(texDiffuse, (floor(size.zw * textureSize.xy   + vec2(-2.0, 0.0))    + 0.5)      / textureSize.xy).rgb * factor.z * brightness;
@@ -58,9 +66,8 @@ void main()
         (color1 + color8 + color9)                   / (factor.y + factor.x + factor2)                       * power.y +
         (color10 + color6 + color11)                 / (factor.y + factor.x + factor2)                       * power.z;
 
-    // THE FIX: We stripped out the scanlineIntencity RGB mask entirely. 
-    // The `power` vectors naturally handle the CRT scanlines without drawing red bands!
-    gl_FragColor.rgb = final.rgb;
+    // Apply the Grayscale mask over the blurred pixels
+    gl_FragColor.rgb = viewSizeHD < viewSize.y ? (final.rgb * maskWeight) : final.rgb;
 	
 #if RETRO_REV02 
 	gl_FragColor.rgb *= screenDim;
