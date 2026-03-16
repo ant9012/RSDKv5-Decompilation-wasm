@@ -70,7 +70,7 @@ Cross-Origin-Embedder-Policy: require-corp
 You might be asking, "HOW TF AM I SUPPOSED TO DO THIS???????"
 If so here are some simple solutions:
 
-## Setting these in whatever interface you're using to launch the port (whether that be custom or by using the RSDK-Library Manager)
+## Setting these in whatever interface you're using to launch the port
 Since you're using a custom interface, it is still **STUPID** easy to setup.
 
 All *you* need to do is to get this: https://raw.githubusercontent.com/gzuidhof/coi-serviceworker/refs/heads/master/coi-serviceworker.js (right-click the link and click on Save As... ), and drop it in the root directory where you are launching the port, and set this where your ```<head>``` of the .html file you're using to launch the port itself (aka where you're launching the RSDKv3.js/.wasm files):
