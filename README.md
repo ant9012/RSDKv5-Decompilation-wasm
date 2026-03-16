@@ -91,5 +91,14 @@ All *you* need to do is to get this: https://raw.githubusercontent.com/gzuidhof/
 ```
 and after that, you're good to go!
 
+
+# Getting Shaders to work on web
+
+For shaders to work on web follow the instructions here: https://rsdkmodding.com/Guides/RSDKv5/Decompilation/ShadersSetup/
+
+#### HOWEVER
+
+Instead of grabbing the RSDKv5/Shaders from the [official repo](https://github.com/RSDKModding/RSDKv5-Decompilation) grab them from here, as there are some changes I needed to make in order for the shaders to look properly.
+
 # Contact:
 Join the [Retro Engine Modding Discord Server](https://dc.railgun.works/retroengine) for any extra questions you may need to know about the decompilation or modding it.
