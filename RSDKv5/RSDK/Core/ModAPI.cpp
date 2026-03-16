@@ -1,6 +1,11 @@
 #include "RSDK/Core/RetroEngine.hpp"
+#ifdef __EMSCRIPTEN__
+#include <dirent.h>
+#include <sys/stat.h>
+#endif
 
 #if RETRO_USE_MOD_LOADER
+
 
 using namespace RSDK;
 
@@ -373,6 +378,35 @@ bool32 RSDK::ScanModFolder(ModInfo *info, const char *targetFile, bool32 fromLoa
             return false;
     }
 
+    #ifdef __EMSCRIPTEN__
+    // Emscripten fallback: std::filesystem iterator doesn't work on virtual FS
+    {
+        std::function<void(const std::string&)> scanDir = [&](const std::string& dir) {
+            DIR *d = opendir(dir.c_str());
+            if (!d) return;
+            struct dirent *entry;
+            while ((entry = readdir(d)) != NULL) {
+                std::string name = entry->d_name;
+                if (name == "." || name == "..") continue;
+                std::string fullPath = dir + "/" + name;
+                struct stat st;
+                if (stat(fullPath.c_str(), &st) == 0) {
+                    if (S_ISDIR(st.st_mode)) {
+                        scanDir(fullPath);
+                    } else {
+                        std::string folderPath = fullPath.substr(modDir.length() + 1);
+                        std::transform(folderPath.begin(), folderPath.end(), folderPath.begin(),
+                                       [](unsigned char c) { return c == '\\' ? '/' : std::tolower(c); });
+                        info->fileMap.insert(std::pair<std::string, std::string>(folderPath, fullPath));
+                    }
+                }
+            }
+            closedir(d);
+        };
+        scanDir(modDir);
+        for (auto& pair : info->fileMap) { PrintLog(PRINT_NORMAL, "[MOD] fileMap: %s -> %s", pair.first.c_str(), pair.second.c_str()); }
+    }
+#else
     if (fs::exists(dataPath) && fs::is_directory(dataPath)) {
         try {
             if (loadingBar) {
@@ -432,6 +466,7 @@ bool32 RSDK::ScanModFolder(ModInfo *info, const char *targetFile, bool32 fromLoa
             PrintLog(PRINT_ERROR, "Mod File Scanning Error: %s", fe.what());
         }
     }
+    #endif
 
     if (loadingBar && fromLoadMod) {
         DrawRectangle(dx - 0x80 + 0x10, dy + 48, 0x100 - 0x20, 0x10, 0x000080, 0xFF, INK_NONE, true);
@@ -511,6 +546,56 @@ void RSDK::LoadMods(bool newOnly, bool32 getVersion)
         }
     }
 
+    #ifdef __EMSCRIPTEN__
+    // --- WASM FIX: SKIP DIRECTORY ITERATION ---
+    // Emscripten crashes on fs::directory_iterator.
+    // We only load mods defined in modconfig.ini, or assume hardcoded list.
+    // (RSDK-Library usually writes modconfig.ini, so this is fine)
+    
+    using namespace std;
+    char modBuf[0x100];
+    sprintf_s(modBuf, sizeof(modBuf), "%smods", SKU::userFileDir);
+    string mod_config = string(modBuf) + "/modconfig.ini";
+    
+    FileIO *configFile = fOpen(mod_config.c_str(), "r");
+    if (configFile) {
+        fClose(configFile);
+        auto ini = iniparser_load(mod_config.c_str());
+
+        int32 c = iniparser_getsecnkeys(ini, "Mods");
+        const char **keys = new const char *[c];
+        iniparser_getseckeys(ini, "Mods", keys);
+
+        for (int32 m = 0; m < c; ++m) {
+            if (newOnly && std::find_if(modList.begin(), modList.end(), [&keys, &m](ModInfo mod) {
+                               return mod.folderName == string(keys[m] + 5);
+                           }) != modList.end())
+                continue;
+            
+            ModInfo info = {};
+            bool32 active = iniparser_getboolean(ini, keys[m], false);
+            // On WASM, we just try to load it. If it fails, it fails.
+            bool32 loaded = LoadMod(&info, modBuf, string(keys[m] + 5), active, getVersion);
+            
+            if (info.id.empty()) {
+                PrintLog(PRINT_NORMAL, "[MOD] Mod %s doesn't exist!", keys[m] + 5);
+                continue;
+            }
+            else if (!loaded) {
+                PrintLog(PRINT_NORMAL, "[MOD] Failed to load mod %s.", info.id.c_str(), active ? "Y" : "N");
+                info.active = false;
+            }
+            else
+                PrintLog(PRINT_NORMAL, "[MOD] fileMap size for %s: %d", info.id.c_str(), (int)info.fileMap.size());
+                PrintLog(PRINT_NORMAL, "[MOD] Loaded mod %s! Active: %s", info.id.c_str(), active ? "Y" : "N");
+            modList.push_back(info);
+        }
+        delete[] keys;
+        iniparser_freedict(ini);
+    }
+    // Skipped fs::directory_iterator loop entirely for WASM
+#else
+
     using namespace std;
     char modBuf[0x100];
     sprintf_s(modBuf, sizeof(modBuf), "%smods", SKU::userFileDir);
@@ -576,6 +661,7 @@ void RSDK::LoadMods(bool newOnly, bool32 getVersion)
             PrintLog(PRINT_ERROR, "Mods folder scanning error: %s", fe.what());
         }
     }
+    #endif
 
     int32 dy = currentScreen->center.y - 32;
     DrawRectangle(currentScreen->center.x - 128, dy, 0x100, 0x48, 0x80, 0xFF, INK_NONE, true);

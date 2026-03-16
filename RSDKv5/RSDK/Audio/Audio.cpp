@@ -30,12 +30,12 @@ float linearInterpolationLookup[LINEAR_INTERPOLATION_LOOKUP_LENGTH];
 
 #if RETRO_AUDIODEVICE_XAUDIO
 #include "XAudio/XAudioDevice.cpp"
-#elif RETRO_AUDIODEVICE_SDL2
-#include "SDL2/SDL2AudioDevice.cpp"
 #elif RETRO_AUDIODEVICE_PORT
 #include "PortAudio/PortAudioDevice.cpp"
 #elif RETRO_AUDIODEVICE_MINI
 #include "MiniAudio/MiniAudioDevice.cpp"
+#elif RETRO_AUDIODEVICE_SDL2
+#include "SDL2/SDL2AudioDevice.cpp"
 #elif RETRO_AUDIODEVICE_OBOE
 #include "Oboe/OboeAudioDevice.cpp"
 #endif
@@ -247,6 +247,7 @@ void RSDK::LoadStream(ChannelInfo *channel)
 
 int32 RSDK::PlayStream(const char *filename, uint32 slot, uint32 startPos, uint32 loopPoint, bool32 loadASync)
 {
+    printf("DEBUG: PlayStream called: %s, streamsEnabled=%d\n", filename, engine.streamsEnabled);
     if (!engine.streamsEnabled)
         return -1;
 

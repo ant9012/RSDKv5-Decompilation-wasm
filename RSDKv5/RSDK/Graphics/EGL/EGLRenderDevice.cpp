@@ -10,7 +10,20 @@
 
 #include <chrono>
 
-#if RETRO_PLATFORM == RETRO_SWITCH
+#ifdef __EMSCRIPTEN__
+#define _GLVERSION "#version 100\n#extension GL_OES_standard_derivatives : enable\n#define in_V attribute\n#define out varying\n#define in_F varying\n"
+
+#define GL_BGRA GL_RGBA
+#define GL_UNSIGNED_INT_8_8_8_8_REV GL_UNSIGNED_BYTE
+
+char _glVPrecision[30];
+char _glFPrecision[30];
+
+#define _YOFF 0
+#define _UOFF 8
+#define _VOFF 16
+
+#elif RETRO_PLATFORM == RETRO_SWITCH
 #define _GLVERSION "#version 330 core\n#define in_V in\n#define in_F in\n"
 
 #define _glVPrecision ""
@@ -908,6 +921,7 @@ void RenderDevice::LoadShader(const char *fileName, bool32 linear)
     char infoLog[0x1000];
     GLuint vert, frag;
     sprintf_s(fullFilePath, sizeof(fullFilePath), "Data/Shaders/OGL/None.vs");
+    PrintLog(PRINT_NORMAL, "DEBUG: Trying to load shader: %s", fullFilePath);
     InitFileInfo(&info);
     if (LoadFile(&info, fullFilePath, FMODE_RB)) {
         uint8 *fileData = NULL;

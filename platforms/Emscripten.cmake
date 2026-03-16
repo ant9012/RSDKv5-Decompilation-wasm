@@ -17,7 +17,6 @@ add_library(libtheora STATIC
     ${THEORA_DIR}/lib/analyze.c
     ${THEORA_DIR}/lib/apiwrapper.c
     ${THEORA_DIR}/lib/bitpack.c
-    ${THEORA_DIR}/lib/cpu.c
     ${THEORA_DIR}/lib/decapiwrapper.c
     ${THEORA_DIR}/lib/decinfo.c
     ${THEORA_DIR}/lib/decode.c
@@ -53,27 +52,33 @@ set(EMSCRIPTEN_FLAGS
     -sUSE_SDL=2
     -sUSE_OGG=1
     -sUSE_PTHREADS=1
-    -DRSDK_REVISION=3
+    -DRETRO_REVISION=3
     -DRSDK_USE_SDL2=1
     -DRETRO_STANDALONE=1
     -DRETRO_USE_MOD_LOADER=1
-    -DRETRO_PLATFORM=5
+    -DRETRO_VER_EGS=1
 )
 
 set(emsc_link_options
-    -sTOTAL_MEMORY=128MB
-    -sALLOW_MEMORY_GROWTH=1
+    -sTOTAL_MEMORY=256MB           # Increased to 256MB for safety
+    -sALLOW_MEMORY_GROWTH=0
+    -sSTACK_SIZE=1MB               # Explicit stack size to prevent overflows
     -sUSE_SDL=2
     -sUSE_OGG=1
     -sFORCE_FILESYSTEM=1
     -sMAIN_MODULE=1
     -sUSE_PTHREADS=1
     -sPTHREAD_POOL_SIZE=4
-    -DRSDK_REVISION=3
+    -DRETRO_REVISION=3
     -lm
     -lidbfs.js
-    -flto
+    #-flto
+    -O3
+    -sASSERTIONS=0
+    -sABORTING_MALLOC=0
+    -sEXPORTED_RUNTIME_METHODS=['HEAPF32','HEAP32','HEAPU8','HEAP8','HEAP16','HEAPU16','HEAPU32','HEAPF64','ccall','cwrap']
     -pthread
+#    -g                             # <--- ADDS DEBUG SYMBOLS (See function names in error)
     -Wl,--whole-archive
     ${THEORA_LIB}
     -Wl,--no-whole-archive

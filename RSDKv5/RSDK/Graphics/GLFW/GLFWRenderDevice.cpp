@@ -519,6 +519,7 @@ void RenderDevice::InitFPSCap()
 {
     lastFrame  = glfwGetTime();
     targetFreq = 1.0 / videoSettings.refreshRate;
+    printf("DEBUG: refreshRate=%d targetFreq=%f\n", videoSettings.refreshRate, targetFreq);
 }
 bool RenderDevice::CheckFPSCap()
 {
@@ -565,6 +566,11 @@ void RenderDevice::FlipScreen()
 
     glClear(GL_COLOR_BUFFER_BIT);
     if (videoSettings.shaderSupport) {
+        printf("--- NATIVE SHADER DEBUG ---\n");
+        printf("viewSize: %f, %f\n", viewSize.x, viewSize.y);
+        printf("textureSize: %f, %f\n", textureSize.x, textureSize.y);
+        printf("pixelSize: %f, %f\n", pixelSize.x, pixelSize.y);
+        printf("---------------------------\n");
         glUniform2fv(glGetUniformLocation(shaderList[videoSettings.shaderID].programID, "textureSize"), 1, &textureSize.x);
         glUniform2fv(glGetUniformLocation(shaderList[videoSettings.shaderID].programID, "pixelSize"), 1, &pixelSize.x);
         glUniform2fv(glGetUniformLocation(shaderList[videoSettings.shaderID].programID, "viewSize"), 1, &viewSize.x);

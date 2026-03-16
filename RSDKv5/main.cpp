@@ -109,7 +109,10 @@ int32 RSDK_main(int32 argc, char **argv, void *linkLogicPtr)
         emscripten_set_main_loop(LoopRSDK, false, true);
     }
 #else
-    int32 exitCode = RSDK::RunRetroEngine(argc, argv);
+    int32 exitCode = 0;
+    do {
+        exitCode = RSDK::RunRetroEngine(argc, argv);
+    } while(RSDK::RenderDevice::isRunning);
 #endif
 
     RSDK::ReleaseCoreAPI();

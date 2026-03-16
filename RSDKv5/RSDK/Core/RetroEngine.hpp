@@ -142,6 +142,9 @@ enum GameRegions {
 #elif defined __SWITCH__
 #define RETRO_PLATFORM   (RETRO_SWITCH)
 #define RETRO_DEVICETYPE (RETRO_STANDARD)
+#elif defined(__EMSCRIPTEN__)
+#define RETRO_PLATFORM   (RETRO_LINUX)
+#define RETRO_DEVICETYPE (RETRO_STANDARD)
 #elif defined __linux__
 #define RETRO_PLATFORM   (RETRO_LINUX)
 #define RETRO_DEVICETYPE (RETRO_STANDARD)
@@ -184,7 +187,7 @@ enum GameRegions {
 #define RETRO_AUDIODEVICE_PORT (0)
 #endif
 #ifndef RETRO_AUDIODEVICE_MINI
-#define RETRO_AUDIODEVICE_MINI (0)
+#define RETRO_AUDIODEVICE_MINI (1)
 #endif
 
 // ============================
@@ -231,7 +234,7 @@ enum GameRegions {
 #define RETRO_REV0U (RETRO_REVISION >= 3)
 
 // Determines if the engine should use EGS features like achievements or not (must be rev02)
-#define RETRO_VER_EGS (RETRO_REV02 && 0)
+#define RETRO_VER_EGS (RETRO_REV02 && 1)
 
 // Enables only EGS's ingame achievements popup without enabling anything else
 #define RETRO_USE_DUMMY_ACHIEVEMENTS (RETRO_REV02 && 1)
@@ -339,7 +342,7 @@ enum GameRegions {
 #define RETRO_INPUTDEVICE_SDL2 (1)
 
 #undef RETRO_AUDIODEVICE_MINI
-#define RETRO_AUDIODEVICE_MINI (0)
+#define RETRO_AUDIODEVICE_MINI (1)
 #undef RETRO_AUDIODEVICE_SDL2
 #define RETRO_AUDIODEVICE_SDL2 (1)
 
@@ -357,6 +360,14 @@ enum GameRegions {
 #undef RETRO_INPUTDEVICE_GLFW
 #define RETRO_INPUTDEVICE_GLFW (1)
 #endif
+
+#elif defined(RSDK_USE_EGL)
+#undef RETRO_RENDERDEVICE_EGL
+#define RETRO_RENDERDEVICE_EGL (1)
+#undef RETRO_AUDIODEVICE_SDL2
+#define RETRO_AUDIODEVICE_SDL2 (0)
+#undef RETRO_AUDIODEVICE_MINI
+#define RETRO_AUDIODEVICE_MINI (1)
 
 #else
 #error RSDK_USE_SDL2, RSDK_USE_OGL or RSDK_USE_VK must be defined.
@@ -490,9 +501,15 @@ enum GameRegions {
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #elif RETRO_RENDERDEVICE_EGL
+#ifdef __EMSCRIPTEN__
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+#include <EGL/egl.h>
+#else
 #include <glad/glad.h>
 #include <EGL/egl.h>    // EGL library
 #include <EGL/eglext.h> // EGL extensions
+#endif
 
 #elif RETRO_RENDERDEVICE_VK
 #if RETRO_PLATFORM == RETRO_LINUX
@@ -644,9 +661,7 @@ struct RetroEngine {
     float streamVolume    = 1.0f;
     float soundFXVolume   = 1.0f;
 
-#ifdef __EMSCRIPTEN__
-    int plusEnabled = 0;
-#endif
+    int plusEnabled = 1;
 };
 
 extern RetroEngine engine;

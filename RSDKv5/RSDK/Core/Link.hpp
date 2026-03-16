@@ -408,8 +408,13 @@ class Link
 {
 public:
     typedef void *Handle;
+    #ifdef __EMSCRIPTEN__
     static constexpr const char *extention = ".wasm";
     static constexpr const char *prefix    = NULL;
+#else
+    static constexpr const char *extention = ".so";
+        static constexpr const char *prefix    = "lib";
+#endif
 
     static inline Handle PlatformLoadLibrary(std::string path)
     {

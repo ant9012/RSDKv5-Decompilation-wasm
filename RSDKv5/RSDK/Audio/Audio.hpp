@@ -77,6 +77,7 @@ void LoadSfx(char *filePath, uint8 plays, uint8 scope);
 #elif RETRO_AUDIODEVICE_MINI
 #include "MiniAudio/MiniAudioDevice.hpp"
 #elif RETRO_AUDIODEVICE_SDL2
+#error "SDL2 AUDIO HPP IS BEING INCLUDED"
 #include "SDL2/SDL2AudioDevice.hpp"
 #elif RETRO_AUDIODEVICE_OBOE
 #include "Oboe/OboeAudioDevice.hpp"

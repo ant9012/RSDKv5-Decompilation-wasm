@@ -144,7 +144,7 @@ int32 DummyCore::GetDefaultGamepadType()
         case PLATFORM_PS4:
         case PLATFORM_XB1:
         case PLATFORM_PC:
-        case PLATFORM_DEV: return (DEVICE_API_NONE << 16) | (DEVICE_TYPE_CONTROLLER << 8) | (0 << 0); break;
+        case PLATFORM_DEV: return (DEVICE_API_NONE << 16) | (DEVICE_TYPE_KEYBOARD << 8) | (0 << 0); break;
     }
 }
 #endif

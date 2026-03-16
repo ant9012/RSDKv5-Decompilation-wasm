@@ -93,8 +93,12 @@ int32 RSDK::RunRetroEngine(int32 argc, char *argv[])
             InitEngine();
 #if RETRO_USE_MOD_LOADER
             // we confirmed the game actually is valid & running, lets start some callbacks
-            videoSettings.shaderID = shader;
+            RenderDevice::isRunning = true;
+            videoSettings.shaderID  = shader;
+            PrintLog(PRINT_NORMAL, "DEBUG: About to reload shaders, old shaderCount=%d", shaderCount);
+            shaderCount = 0;
             RenderDevice::InitShaders();
+            PrintLog(PRINT_NORMAL, "DEBUG: After reload shaders, new shaderCount=%d", shaderCount);
             RenderDevice::SetWindowTitle();
             RenderDevice::lastShaderID = -1;
 #else
@@ -110,7 +114,8 @@ int32 RSDK::RunRetroEngine(int32 argc, char *argv[])
         r_init = true;
     }
 
-    RenderDevice::InitFPSCap();
+    static bool fpsCapInitialized = false;
+    if (!fpsCapInitialized) { RenderDevice::InitFPSCap(); fpsCapInitialized = true; }
 
     if (RenderDevice::isRunning) {
         RenderDevice::ProcessEvents();
@@ -118,7 +123,11 @@ int32 RSDK::RunRetroEngine(int32 argc, char *argv[])
         if (!RenderDevice::isRunning)
             return 0;
 
+#ifdef __EMSCRIPTEN__
+        if (true) {
+#else
         if (RenderDevice::CheckFPSCap()) {
+            #endif
             RenderDevice::UpdateFPSCap();
 
             AudioDevice::FrameInit();
@@ -1249,6 +1258,9 @@ void RSDK::InitGameLink()
 #if RETRO_REV02
     EngineInfo info;
 
+    printf("ENGINE: FunctionTable size = %zu bytes (%d entries)\n", sizeof(RSDKFunctionTable), FunctionTable_Count);
+    printf("ENGINE: FunctionTable_PlayMusic = %d\n", FunctionTable_PlayMusic);
+    printf("ENGINE: APITable size = %zu bytes (%d entries)\n", sizeof(APIFunctionTable), APITable_Count);
     info.functionTable = RSDKFunctionTable;
     info.APITable      = APIFunctionTable;
 
@@ -1296,10 +1308,19 @@ void RSDK::InitGameLink()
 #endif
         if (engine.useExternalCode) {
             char buffer[0x100];
+            #ifdef __EMSCRIPTEN__
+            // Force the exact filename. 
+            // No leading slash needed because RSDK-Library sets CWD to /RSDKv5U
+            sprintf(buffer, "Game.wasm");
+#else
             sprintf(buffer, "%s%s", SKU::userFileDir, gameLogicName);
+            #endif
 
             if (!gameLogicHandle)
                 gameLogicHandle = Link::Open(buffer);
+            else {
+                PrintLog(PRINT_ERROR, "CRITICAL: Failed to open game logic file '%s' -> %s", buffer, Link::GetError());
+            }
 
             if (gameLogicHandle) {
                 bool32 canLink = true;
