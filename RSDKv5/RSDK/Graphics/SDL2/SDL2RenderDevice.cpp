@@ -34,6 +34,16 @@ float RenderDevice::glTextureH = 256.0f;
 
 bool RenderDevice::Init()
 {
+    #ifdef __EMSCRIPTEN__
+    // Force 3x Scale to fix up the display because 1x looks fucked
+    if (videoSettings.windowWidth <= 0) {
+        int multiplier = 3;
+        videoSettings.windowWidth  = videoSettings.pixWidth * multiplier;
+        videoSettings.windowHeight = videoSettings.pixHeight * multiplier;
+        videoSettings.windowed     = true;
+    }
+#endif
+    
     const char *gameTitle = gameVerInfo.gameTitle;
 
     SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
