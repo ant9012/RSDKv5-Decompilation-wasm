@@ -100,11 +100,10 @@ For shaders to work on web follow the instructions here: https://rsdkmodding.com
 
 Instead of grabbing the RSDKv5/Shaders from the [official repo](https://github.com/RSDKModding/RSDKv5-Decompilation) grab them from here, as there are some changes I needed to make in order for the shaders to look properly.
 
-You can also extract your Data.rsdk from [RetroED](https://github.com/RSDKModding/RetroED) and add the Shaders folder in there.
+You can also extract your Data.rsdk from [RetroED](https://github.com/RSDKModding/RetroED), using the RSDK Unpacker, select your Data.rsdk by clicking on Select DataPack, then it will give you a list of .txt files. Make sure to click on the RSDKv5 one. Now click on Export DataPack and set the directory where you want the Data folder to be, and now there will be a Data Folder and add the Shaders folder in there in the root of the Data foler.
 
 ### How to do such a feat
 Extract your Data.rsdk using [RetroED](https://github.com/RSDKModding/RetroED) and just plop the RSDKv5/Shaders folder in there.
 
-You may notice that your canvas (where you see the game) may look a little *squished*, in that case just bump up the window size to 3x (I will delete this once I figure out how to set this as the regular settings instead of 1x.)
 # Contact:
 Join the [Retro Engine Modding Discord Server](https://dc.railgun.works/retroengine) for any extra questions you may need to know about the decompilation or modding it.
