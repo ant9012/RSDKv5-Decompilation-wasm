@@ -25,7 +25,7 @@ This project uses [CMake](https://cmake.org/), a versatile building system that 
 In order to clone the repository, you need to install Git, which you can get [here](https://git-scm.com/downloads).
 
 Clone the repo **recursively**, using:
-`git clone --recursive --single-branch --branch web https://github.com/Jdsle/RSDKv5-Decompilation`
+`git clone --recursive --single-branch --branch web https://github.com/ant9012/RSDKv5-Decompilation-wasm.git`
 
 If you've already cloned the repo, run this command inside of the repository:
 ```git submodule update --init```
