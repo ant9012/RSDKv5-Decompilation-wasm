@@ -24,10 +24,15 @@ uint8 RenderDevice::lastTextureFormat = -1;
 #include <GLES2/gl2.h>
 GLuint RenderDevice::glScreenTextures[SCREEN_COUNT];
 GLuint RenderDevice::glImageTexture;
+GLuint RenderDevice::glYTextureID = 0; 
+GLuint RenderDevice::glUTextureID = 0; 
+GLuint RenderDevice::glVTextureID = 0; 
 GLuint RenderDevice::glVBO;
 int32 RenderDevice::lastGLShaderID = -1;
 float RenderDevice::glTextureW = 512.0f;
-float RenderDevice::glTextureH = 256.0f;
+float RenderDevice::glTextureH     = 256.0f;
+float RenderDevice::glVideoU = 1.0f;
+float RenderDevice::glVideoV = 1.0f;
 #endif
 
 #define NORMALIZE(val, minVal, maxVal) ((float)(val) - (float)(minVal)) / ((float)(maxVal) - (float)(minVal))
@@ -126,10 +131,11 @@ void RenderDevice::FlipScreen()
     }
 
 #ifdef __EMSCRIPTEN__
-    if (videoSettings.shaderSupport && shaderCount > 0) {
-        int32 shaderID = videoSettings.shaderID;
-        if (shaderID >= shaderCount) shaderID = 0;
+    // 1. Setup Shader and basic uniforms
+    int32 shaderID = videoSettings.shaderID;
+    if (shaderID >= shaderCount) shaderID = 0;
 
+    if (videoSettings.shaderSupport && shaderCount > 0) {
         if (lastGLShaderID != shaderID) {
             lastGLShaderID = shaderID;
             glUseProgram(shaderList[shaderID].programID);
@@ -147,13 +153,8 @@ void RenderDevice::FlipScreen()
         glUniform2f(glGetUniformLocation(prog, "viewSize"), viewSize.x, viewSize.y);
         glUniform1f(glGetUniformLocation(prog, "screenDim"), videoSettings.dimMax * videoSettings.dimPercent);
     }
-    static bool printed = false;
-    if (!printed) {
-        PrintLog(PRINT_NORMAL, "SHADER UNIFORMS: textureSize=(%f,%f) pixelSize=(%f,%f) viewSize=(%f,%f)",
-                 glTextureW, glTextureH, (float)screens[0].size.x, (float)screens[0].size.y, viewSize.x, viewSize.y);
-        printed = true;
-    }
 
+    // 2. Clear and Setup Vertex Attributes
     glClear(GL_COLOR_BUFFER_BIT);
     glBindBuffer(GL_ARRAY_BUFFER, glVBO);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
@@ -161,13 +162,75 @@ void RenderDevice::FlipScreen()
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    glBindTexture(GL_TEXTURE_2D, glScreenTextures[0]);
+// 3. YUV Binding Logic
+    // Notice we added screenCount == 0. This tells OpenGL to exit video mode when you press Enter!
+    if (videoSettings.screenCount == 0 && lastTextureFormat == SHADER_YUV_420) {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, glYTextureID);
+        
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, glUTextureID);
+        
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, glVTextureID);
+
+        GLuint prog = shaderList[shaderID].programID;
+        glUseProgram(prog);
+        
+        glUniform1i(glGetUniformLocation(prog, "texY"), 0);
+        glUniform1i(glGetUniformLocation(prog, "texU"), 1);
+        glUniform1i(glGetUniformLocation(prog, "texV"), 2);
+
+        float uMax = glVideoU;
+        float vMax = glVideoV;
+        float videoVerts[] = {
+            +1.0f, -1.0f, 1.0f, uMax, vMax,
+            +1.0f, +1.0f, 1.0f, uMax, 0.0f,
+            -1.0f, +1.0f, 1.0f, 0.0f, 0.0f,
+            +1.0f, -1.0f, 1.0f, uMax, vMax,
+            -1.0f, -1.0f, 1.0f, 0.0f, vMax,
+            -1.0f, +1.0f, 1.0f, 0.0f, 0.0f,
+        };
+        glBindBuffer(GL_ARRAY_BUFFER, glVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(videoVerts), videoVerts);
+        
+        glActiveTexture(GL_TEXTURE0);
+    }
+    else {
+        // --- STANDARD GAMEPLAY RESUME ---
+        
+        // 1. Force OpenGL back to the standard game shader so it stops trying to use the YUV one!
+        glUseProgram(shaderList[shaderID].programID);
+
+        glActiveTexture(GL_TEXTURE0);
+        
+        // If screenCount is 0 but it's not a video, it's a static title screen image
+        if (videoSettings.screenCount == 0) {
+            glBindTexture(GL_TEXTURE_2D, glImageTexture);
+        } else {
+            glBindTexture(GL_TEXTURE_2D, glScreenTextures[0]);
+        }
+
+        // 2. Revert back to your custom float array! The native C++ RenderVertex struct breaks WebGL.
+        float uMax = (float)screens[0].size.x / glTextureW;
+        float vMax = (float)screens[0].size.y / glTextureH;
+        float quadVerts[] = {
+            +1.0f, -1.0f, 1.0f, uMax, vMax,
+            +1.0f, +1.0f, 1.0f, uMax, 0.0f,
+            -1.0f, +1.0f, 1.0f, 0.0f, 0.0f,
+            +1.0f, -1.0f, 1.0f, uMax, vMax,
+            -1.0f, -1.0f, 1.0f, 0.0f, vMax,
+            -1.0f, +1.0f, 1.0f, 0.0f, 0.0f,
+        };
+        glBindBuffer(GL_ARRAY_BUFFER, glVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(quadVerts), quadVerts);
+    }
+
+    // 4. Draw and Swap (Fixed back to standard 6 vertices!)
     glDrawArrays(GL_TRIANGLES, 0, 6);
-
     SDL_GL_SwapWindow(window);
-    return;
-#endif
-
+#else
+    // --- NON-EMSCRIPTEN CODE ---
     float dimAmount = videoSettings.dimMax * videoSettings.dimPercent;
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0xFF);
@@ -265,10 +328,10 @@ void RenderDevice::FlipScreen()
     dst.y = vertexBuffer[startVert].pos.y;                                                                                                           \
     dst.w = vertexBuffer[startVert + 2].pos.x - dst.x;                                                                                               \
     dst.h = vertexBuffer[startVert + 2].pos.y - dst.y;                                                                                               \
-    src.x = vertexBuffer[startVert].tex.x * textureSize.x;                                                                                           \
-    src.y = vertexBuffer[startVert].tex.y * textureSize.y;                                                                                           \
-    src.w = vertexBuffer[startVert + 2].tex.x * textureSize.x - src.x;                                                                               \
-    src.h = vertexBuffer[startVert + 2].tex.y * textureSize.y - src.y;
+    src.x = vertexBuffer[startVert].tex.x * 1024;                                                                                           \
+    src.y = vertexBuffer[startVert].tex.y * 512;                                                                                           \
+    src.w = vertexBuffer[startVert + 2].tex.x * 1024 - src.x;                                                                               \
+    src.h = vertexBuffer[startVert + 2].tex.y * 512 - src.y;
 
     switch (videoSettings.screenCount) {
         default:
@@ -279,9 +342,13 @@ void RenderDevice::FlipScreen()
             startVert = 18;
 #endif
             _SET_RECTS;
-            src.w = vertexBuffer[startVert + 2].tex.x * 1024 - src.x;
-            src.h = vertexBuffer[startVert + 2].tex.y * 512 - src.y;
-            SDL_RenderCopy(renderer, imageTexture, &src, &dst);
+            if (lastTextureFormat == SHADER_YUV_420) {
+                // Draw the video texture directly to the full renderer target
+                SDL_RenderCopy(renderer, imageTexture, NULL, NULL);
+            }
+            else {
+                SDL_RenderCopy(renderer, imageTexture, &src, &dst);
+            }
             break;
 
         case 1:
@@ -348,6 +415,7 @@ void RenderDevice::FlipScreen()
         SDL_RenderFillRect(renderer, NULL);
     }
     SDL_RenderPresent(renderer);
+#endif 
 }
 
 void RenderDevice::Release(bool32 isRefresh)
@@ -1255,51 +1323,101 @@ void RenderDevice::SetupImageTexture(int32 width, int32 height, uint8 *imagePixe
     SDL_UnlockTexture(imageTexture);
 }
 
-void RenderDevice::SetupVideoTexture_YUV420(int32 width, int32 height, uint8 *yPlane, uint8 *uPlane, uint8 *vPlane, int32 strideY, int32 strideU,
-                                            int32 strideV)
+void RenderDevice::SetupVideoTexture_YUV420(int32 width, int32 height, uint8 *yPlane, uint8 *uPlane, uint8 *vPlane, int32 strideY, int32 strideU, int32 strideV)
 {
-    if (lastTextureFormat != SHADER_YUV_420) {
-        if (imageTexture)
-            SDL_DestroyTexture(imageTexture);
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+#ifdef __EMSCRIPTEN__
+    if (!glYTextureID) glGenTextures(1, &glYTextureID);
+    if (!glUTextureID) glGenTextures(1, &glUTextureID);
+    if (!glVTextureID) glGenTextures(1, &glVTextureID);
 
-        imageTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_YV12, SDL_TEXTUREACCESS_STREAMING, width, height);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glVideoU = 1.0f; glVideoV = 1.0f; 
 
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
-        lastTextureFormat = SHADER_YUV_420;
-    }
+    auto uploadPlane = [](GLuint texID, int w, int h, uint8* data, int32 stride) {
+        glBindTexture(GL_TEXTURE_2D, texID);
+        if (w == stride) {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, w, h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+        } else {
+            static std::vector<uint8> pack;
+            if (pack.size() < w * h) pack.resize(w * h);
+            for (int i = 0; i < h; i++) memcpy(pack.data() + (i * w), data + (i * stride), w);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, w, h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, pack.data());
+        }
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    };
 
-    SDL_UpdateYUVTexture(imageTexture, NULL, yPlane, strideY, uPlane, strideU, vPlane, strideV);
+    uploadPlane(glYTextureID, width, height, yPlane, strideY);
+    uploadPlane(glUTextureID, width >> 1, height >> 1, uPlane, strideU); // Half Width, Half Height
+    uploadPlane(glVTextureID, width >> 1, height >> 1, vPlane, strideV); // Half Width, Half Height
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    lastTextureFormat = SHADER_YUV_420; // Force FlipScreen to use our shader
+#endif
 }
-void RenderDevice::SetupVideoTexture_YUV422(int32 width, int32 height, uint8 *yPlane, uint8 *uPlane, uint8 *vPlane, int32 strideY, int32 strideU,
-                                            int32 strideV)
+
+void RenderDevice::SetupVideoTexture_YUV422(int32 width, int32 height, uint8 *yPlane, uint8 *uPlane, uint8 *vPlane, int32 strideY, int32 strideU, int32 strideV)
 {
-    if (lastTextureFormat != SHADER_YUV_422) {
-        if (imageTexture)
-            SDL_DestroyTexture(imageTexture);
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+#ifdef __EMSCRIPTEN__
+    // Setup identical to 420, but height is NOT bit-shifted
+    if (!glYTextureID) glGenTextures(1, &glYTextureID);
+    if (!glUTextureID) glGenTextures(1, &glUTextureID);
+    if (!glVTextureID) glGenTextures(1, &glVTextureID);
 
-        imageTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_YV12, SDL_TEXTUREACCESS_STREAMING, width, height);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glVideoU = 1.0f; glVideoV = 1.0f;
 
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
-        lastTextureFormat = SHADER_YUV_422;
-    }
-
-    SDL_UpdateYUVTexture(imageTexture, NULL, yPlane, strideY, uPlane, strideU, vPlane, strideV);
+    auto uploadPlane = [](GLuint texID, int w, int h, uint8* data, int32 stride) {
+        glBindTexture(GL_TEXTURE_2D, texID);
+        if (w == stride) {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, w, h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+        } else {
+            static std::vector<uint8> pack;
+            if (pack.size() < w * h) pack.resize(w * h);
+            for (int i = 0; i < h; i++) memcpy(pack.data() + (i * w), data + (i * stride), w);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, w, h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, pack.data());
+        }
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    };
+    
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    lastTextureFormat = SHADER_YUV_420; // Reuse the 420 Shader!
+#endif
 }
-void RenderDevice::SetupVideoTexture_YUV444(int32 width, int32 height, uint8 *yPlane, uint8 *uPlane, uint8 *vPlane, int32 strideY, int32 strideU,
-                                            int32 strideV)
+
+void RenderDevice::SetupVideoTexture_YUV444(int32 width, int32 height, uint8 *yPlane, uint8 *uPlane, uint8 *vPlane, int32 strideY, int32 strideU, int32 strideV)
 {
-    if (lastTextureFormat != SHADER_YUV_444) {
-        if (imageTexture)
-            SDL_DestroyTexture(imageTexture);
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+#ifdef __EMSCRIPTEN__
+    // Setup identical to 420, but neither width nor height are bit-shifted
+    if (!glYTextureID) glGenTextures(1, &glYTextureID);
+    if (!glUTextureID) glGenTextures(1, &glUTextureID);
+    if (!glVTextureID) glGenTextures(1, &glVTextureID);
 
-        imageTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_YV12, SDL_TEXTUREACCESS_STREAMING, width, height);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glVideoU = 1.0f; glVideoV = 1.0f;
 
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
-        lastTextureFormat = SHADER_YUV_444;
-    }
-
-    SDL_UpdateYUVTexture(imageTexture, NULL, yPlane, strideY, uPlane, strideU, vPlane, strideV);
+    auto uploadPlane = [](GLuint texID, int w, int h, uint8* data, int32 stride) {
+        glBindTexture(GL_TEXTURE_2D, texID);
+        if (w == stride) {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, w, h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+        } else {
+            static std::vector<uint8> pack;
+            if (pack.size() < w * h) pack.resize(w * h);
+            for (int i = 0; i < h; i++) memcpy(pack.data() + (i * w), data + (i * stride), w);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, w, h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, pack.data());
+        }
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    };
+    
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    lastTextureFormat = SHADER_YUV_420; // Reuse the 420 Shader!
+#endif
 }

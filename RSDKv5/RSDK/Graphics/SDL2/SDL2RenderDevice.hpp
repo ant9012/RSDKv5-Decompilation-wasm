@@ -88,6 +88,11 @@ private:
 public:
     static GLuint glScreenTextures[SCREEN_COUNT];
     static GLuint glImageTexture;
+    static GLuint glYTextureID;
+    static GLuint glUTextureID;
+    static GLuint glVTextureID;
+    static float glVideoU;
+    static float glVideoV;
     static GLuint glVBO;
     static int32 lastGLShaderID;
     static float glTextureW;
