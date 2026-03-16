@@ -36,16 +36,24 @@ The only dependency that you need is libtheora, which you can find at: https://x
 
 After downloading libtheora, unzip it in `dependencies/all` as 'libtheora'.
 
-## Compiling
+## Compiling for Emscripten
 
 > [!NOTE]  
 > This fork does *not* run standalone! If you want to host your own build, you will need to build the [RSDK-Library Engine Manager](https://github.com/Jdsle/RSDK), or develop your own interface.
 
-> Just looking for prebuilt versions? They're hosted at https://Jdsle.github.io/RSDK
+> Also you will need to replace RSDKv5U.js/wasm in the public/modules folder if you're using the [RSDK-Library Engine Manager](https://github.com/Jdsle/RSDK), if you want prebuilt versions go here: https://github.com/ant9012/rsdk-library-fork/tree/main/public/modules and for playable prebuilts if you simply want to play this web port, go here: https://ant9012.github.io/rsdk-library-fork
 
 Compiling is as simple as typing the following in the root repository directory:
 ```
 emcmake cmake -B build
+cmake --build build --config release
+```
+
+## Compiling for your native platform
+
+Compiling is as simple as typing the following in the root repository directory:
+```
+cmake cmake -B build
 cmake --build build --config release
 ```
 
