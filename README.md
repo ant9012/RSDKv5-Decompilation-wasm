@@ -45,7 +45,7 @@ After downloading libtheora, unzip it in `dependencies/all` as 'libtheora'.
 
 Compiling is as simple as typing the following in the root repository directory:
 ```
-emcmake cmake -B build
+emcmake cmake -B build  -DCMAKE_C_FLAGS="-s USE_OGG=1"
 cmake --build build --config release
 ```
 
@@ -53,7 +53,7 @@ cmake --build build --config release
 
 Compiling is as simple as typing the following in the root repository directory:
 ```
-cmake cmake -B build
+cmake -B build 
 cmake --build build --config release
 ```
 
