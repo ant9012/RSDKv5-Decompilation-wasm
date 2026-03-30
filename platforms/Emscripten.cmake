@@ -61,7 +61,8 @@ set(EMSCRIPTEN_FLAGS
 
 set(emsc_link_options
     -sTOTAL_MEMORY=256MB           # Increased to 256MB for safety
-    -sALLOW_MEMORY_GROWTH=0
+    -sALLOW_MEMORY_GROWTH=1
+    -sALLOW_TABLE_GROWTH=1
     -sSTACK_SIZE=1MB               # Explicit stack size to prevent overflows
     -sUSE_SDL=2
     -sUSE_OGG=1
@@ -78,7 +79,7 @@ set(emsc_link_options
     -sABORTING_MALLOC=0
     -sEXPORTED_RUNTIME_METHODS=['HEAPF32','HEAP32','HEAPU8','HEAP8','HEAP16','HEAPU16','HEAPU32','HEAPF64','ccall','cwrap']
     -pthread
-#    -g                             # <--- ADDS DEBUG SYMBOLS (See function names in error)
+    -g                             # <--- ADDS DEBUG SYMBOLS (See function names in error)
     -Wl,--whole-archive
     ${THEORA_LIB}
     -Wl,--no-whole-archive
