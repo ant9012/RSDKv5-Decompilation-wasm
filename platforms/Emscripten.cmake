@@ -43,9 +43,10 @@ add_library(libtheora STATIC
     ${THEORA_DIR}/lib/tokenize.c
 )
 
-target_compile_options(libtheora PRIVATE ${THEORA_FLAGS})
+target_compile_options(libtheora PRIVATE ${THEORA_FLAGS} -sUSE_OGG=1)
+target_link_libraries(libtheora PRIVATE "-sUSE_OGG=1")
 
-target_include_directories(libtheora PRIVATE ${THEORA_DIR}/include ${OGG_DIR}/include)
+target_include_directories(libtheora PRIVATE ${THEORA_DIR}/include)
 target_include_directories(RetroEngine PRIVATE ${THEORA_DIR}/include)
 target_link_libraries(RetroEngine libtheora)
 
