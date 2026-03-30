@@ -13,8 +13,7 @@ We do not condone using this project as a means for piracy in any form. This pro
 * Added a built-in shader compiler for backends/platforms that support it.
 * Added various other backends to windows aside from the usual DirectX 9 backends
 
-## If you are here for Sonic Mania:
-You have the option of building RSDKv5 alongside Mania in [the Sonic Mania Decompilation repo](https://github.com/RSDKModding/Sonic-Mania-Decompilation).
+
 
 # How to Build
 
