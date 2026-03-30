@@ -1,29 +1,33 @@
-// =======================
-// VARIABLES
-// =======================
+precision mediump float;
 in_F vec2 ex_UV;
 in_F vec4 ex_color;
 
-uniform sampler2D texDiffuse; // screen display texture
+// Expose the 3 textures so your C++ can actually bind to them!
+uniform sampler2D texY;
+uniform sampler2D texU;
+uniform sampler2D texV;
 
-uniform vec2 pixelSize;   // internal game resolution (usually 424x240 or smth)
-uniform vec2 textureSize; // size of the internal framebuffer texture
-uniform vec2 viewSize;    // window viewport size
-#if RETRO_REV02  // if RETRO_REV02 is defined it assumes the engine is plus/rev02 RSDKv5, else it assumes pre-plus/Rev01 RSDKv5
-uniform float screenDim; // screen dimming percent
+#if RETRO_REV02  
+uniform float screenDim; 
 #endif
-
 
 void main()
 {
-    vec3 yuv;
-    yuv.r  = texture2D(texDiffuse, ex_UV).r;
-    yuv.gb = texture2D(texDiffuse, vec2(clamp(ex_UV.x / 2.0, 0.0, 0.499), ex_UV.y)).gb;
-    yuv -= vec3(16.0 / 256.0, .5, .5);
+    // Sample the 3 planes dynamically uploaded by our WebGL C++
+    float y = texture2D(texY, ex_UV).r;
+    float u = texture2D(texU, ex_UV).r;
+    float v = texture2D(texV, ex_UV).r;
 
-    gl_FragColor.r = 1.164 * yuv.r + 1.596 * yuv.b;
-    gl_FragColor.g = 1.164 * yuv.r - 0.392 * yuv.g - 0.813 * yuv.b;
-    gl_FragColor.b = 1.164 * yuv.r + 2.017 * yuv.g;
+    // Apply the official RSDKv5 exact color offsets
+    y -= (16.0 / 256.0);
+    u -= 0.5;
+    v -= 0.5;
+
+    // Convert to RGB
+    gl_FragColor.r = 1.164 * y + 1.596 * v;
+    gl_FragColor.g = 1.164 * y - 0.392 * u - 0.813 * v;
+    gl_FragColor.b = 1.164 * y + 2.017 * u;
+
 #if RETRO_REV02 
     gl_FragColor.rgb *= screenDim;
 #endif
