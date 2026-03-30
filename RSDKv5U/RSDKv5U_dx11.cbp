@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="RSDKv5U-dx11" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug x64">
+				<Option output="../build/x64/Debug/DX11/RSDKv5U-dx11" prefix_auto="1" extension_auto="1" />
+				<Option object_output="../build/x64/Debug/v5U/DX11/Intermediate/" />
+				<Option deps_output="../build/x64/Debug/DX11/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-DRSDK_USE_DX11" />
+					<Add option="-DRETRO_REVISION=3" />
+					<Add option="-D_DEBUG" />
+					<Add option="-D_CONSOLE" />
+					<Add directory="../dependencies/all/tinyxml2/" />
+					<Add directory="../dependencies/windows/SDL2/include/" />
+					<Add directory="../dependencies/windows/libogg/include/" />
+					<Add directory="../dependencies/windows/libtheora/include/" />
+					<Add directory="../dependencies/all/" />
+					<Add directory="../RSDKv5/" />
+					<Add directory="$(ExecutablePath)/" />
+					<Add directory="$(DXSDK_DIR)Utilities/bin/x86/" />
+					<Add directory="$(IncludePath)/" />
+					<Add directory="$(DXSDK_DIR)Include/" />
+					<Add directory="$(LibraryPath)/" />
+					<Add directory="$(DXSDK_DIR)Lib/$(PlatformTargetAsMSBuildArchitecture)/" />
+				</Compiler>
+				<Linker>
+					<Add library="libogg.lib" />
+					<Add library="libtheora_static.lib" />
+					<Add library="d3d11.lib" />
+					<Add library="d3dcompiler.lib" />
+					<Add library="DXGI.lib" />
+					<Add library="XInput.lib" />
+					<Add library="winmm.lib" />
+					<Add library="comctl32.lib" />
+					<Add library="kernel32.lib" />
+					<Add library="user32.lib" />
+					<Add library="gdi32.lib" />
+					<Add library="winspool.lib" />
+					<Add library="comdlg32.lib" />
+					<Add library="advapi32.lib" />
+					<Add library="shell32.lib" />
+					<Add library="ole32.lib" />
+					<Add library="oleaut32.lib" />
+					<Add library="uuid.lib" />
+					<Add library="odbc32.lib" />
+					<Add library="odbccp32.lib" />
+					<Add directory="../dependencies/windows/SDL2/lib/$(PlatformTargetAsMSBuildArchitecture)/" />
+					<Add directory="../dependencies/windows/libtheora/win32/VS2010/x64/Debug/" />
+					<Add directory="../dependencies/windows/libogg/win32/VS2015/x64/Debug/" />
+				</Linker>
+			</Target>
+			<Target title="Release x64">
+				<Option output="../build/x64/Release/DX11/RSDKv5U-dx11_64" prefix_auto="1" extension_auto="1" />
+				<Option object_output="../build/x64/Release/v5U/DX11/Intermediate/" />
+				<Option deps_output="../build/x64/Release/DX11/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-DRSDK_USE_DX11" />
+					<Add option="-DRETRO_REVISION=3" />
+					<Add option="-DNDEBUG" />
+					<Add option="-D_CONSOLE" />
+					<Add directory="../dependencies/all/tinyxml2/" />
+					<Add directory="../dependencies/windows/SDL2/include/" />
+					<Add directory="../dependencies/windows/libogg/include/" />
+					<Add directory="../dependencies/windows/libtheora/include/" />
+					<Add directory="../dependencies/all/" />
+					<Add directory="../RSDKv5/" />
+				</Compiler>
+				<Linker>
+					<Add library="libogg.lib" />
+					<Add library="libtheora_static.lib" />
+					<Add library="d3d11.lib" />
+					<Add library="d3dcompiler.lib" />
+					<Add library="DXGI.lib" />
+					<Add library="XInput.lib" />
+					<Add library="winmm.lib" />
+					<Add library="comctl32.lib" />
+					<Add library="kernel32.lib" />
+					<Add library="user32.lib" />
+					<Add library="gdi32.lib" />
+					<Add library="winspool.lib" />
+					<Add library="comdlg32.lib" />
+					<Add library="advapi32.lib" />
+					<Add library="shell32.lib" />
+					<Add library="ole32.lib" />
+					<Add library="oleaut32.lib" />
+					<Add library="uuid.lib" />
+					<Add library="odbc32.lib" />
+					<Add library="odbccp32.lib" />
+					<Add directory="../dependencies/windows/SDL2/lib/$(PlatformTargetAsMSBuildArchitecture)/" />
+					<Add directory="../dependencies/windows/libtheora/win32/VS2010/x64/Release/" />
+					<Add directory="../dependencies/windows/libogg/win32/VS2015/x64/Release/" />
+				</Linker>
+			</Target>
+			<Target title="Release Win32">
+				<Option output="../build/Win32/Release/DX11/RSDKv5U-dx11" prefix_auto="1" extension_auto="1" />
+				<Option object_output="../build/Win32/Release/v5U/DX11/Intermediate/" />
+				<Option deps_output="../build/Win32/Release/DX11/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-DRSDK_USE_DX11" />
+					<Add option="-DRETRO_REVISION=3" />
+					<Add option="-DWIN32" />
+					<Add option="-DNDEBUG" />
+					<Add option="-D_CONSOLE" />
+					<Add directory="../dependencies/all/tinyxml2/" />
+					<Add directory="../dependencies/windows/SDL2/include/" />
+					<Add directory="../dependencies/windows/libogg/include/" />
+					<Add directory="../dependencies/windows/libtheora/include/" />
+					<Add directory="../dependencies/all/" />
+					<Add directory="../RSDKv5/" />
+				</Compiler>
+				<Linker>
+					<Add library="libogg.lib" />
+					<Add library="libtheora_static.lib" />
+					<Add library="d3d11.lib" />
+					<Add library="d3dcompiler.lib" />
+					<Add library="DXGI.lib" />
+					<Add library="XInput.lib" />
+					<Add library="winmm.lib" />
+					<Add library="comctl32.lib" />
+					<Add library="kernel32.lib" />
+					<Add library="user32.lib" />
+					<Add library="gdi32.lib" />
+					<Add library="winspool.lib" />
+					<Add library="comdlg32.lib" />
+					<Add library="advapi32.lib" />
+					<Add library="shell32.lib" />
+					<Add library="ole32.lib" />
+					<Add library="oleaut32.lib" />
+					<Add library="uuid.lib" />
+					<Add library="odbc32.lib" />
+					<Add library="odbccp32.lib" />
+					<Add directory="../dependencies/windows/SDL2/lib/$(PlatformTargetAsMSBuildArchitecture)/" />
+					<Add directory="../dependencies/windows/libtheora/win32/VS2010/Win32/Release/" />
+					<Add directory="../dependencies/windows/libogg/win32/VS2015/Win32/Release/" />
+				</Linker>
+			</Target>
+			<Target title="Debug Win32">
+				<Option output="../build/Win32/Debug/DX11/RSDKv5U-dx11" prefix_auto="1" extension_auto="1" />
+				<Option object_output="../build/Win32/Debug/v5U/DX11/Intermediate/" />
+				<Option deps_output="../build/Win32/Debug/DX11/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-DRSDK_USE_DX11" />
+					<Add option="-DRETRO_REVISION=3" />
+					<Add option="-DWIN32" />
+					<Add option="-D_DEBUG" />
+					<Add option="-D_CONSOLE" />
+					<Add directory="../dependencies/all/tinyxml2/" />
+					<Add directory="../dependencies/windows/SDL2/include/" />
+					<Add directory="../dependencies/windows/libogg/include/" />
+					<Add directory="../dependencies/windows/libtheora/include/" />
+					<Add directory="../dependencies/all/" />
+					<Add directory="../RSDKv5/" />
+					<Add directory="$(ExecutablePath)/" />
+					<Add directory="$(DXSDK_DIR)Utilities/bin/x86/" />
+					<Add directory="$(IncludePath)/" />
+					<Add directory="$(DXSDK_DIR)Include/" />
+					<Add directory="$(LibraryPath)/" />
+					<Add directory="$(DXSDK_DIR)Lib/$(PlatformTargetAsMSBuildArchitecture)/" />
+				</Compiler>
+				<Linker>
+					<Add library="libogg.lib" />
+					<Add library="libtheora_static.lib" />
+					<Add library="d3d11.lib" />
+					<Add library="d3dcompiler.lib" />
+					<Add library="DXGI.lib" />
+					<Add library="XInput.lib" />
+					<Add library="winmm.lib" />
+					<Add library="comctl32.lib" />
+					<Add library="kernel32.lib" />
+					<Add library="user32.lib" />
+					<Add library="gdi32.lib" />
+					<Add library="winspool.lib" />
+					<Add library="comdlg32.lib" />
+					<Add library="advapi32.lib" />
+					<Add library="shell32.lib" />
+					<Add library="ole32.lib" />
+					<Add library="oleaut32.lib" />
+					<Add library="uuid.lib" />
+					<Add library="odbc32.lib" />
+					<Add library="odbccp32.lib" />
+					<Add directory="../dependencies/windows/SDL2/lib/$(PlatformTargetAsMSBuildArchitecture)/" />
+					<Add directory="../dependencies/windows/libtheora/win32/VS2010/Win32/Debug/" />
+					<Add directory="../dependencies/windows/libogg/win32/VS2015/Win32/Debug/" />
+				</Linker>
+			</Target>
+		</Build>
+		<Unit filename="../RSDKv5/RSDK/Audio/Audio.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Audio/Audio.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Audio/NX/NXAudioDevice.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Audio/NX/NXAudioDevice.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Audio/SDL2/SDL2AudioDevice.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Audio/SDL2/SDL2AudioDevice.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Audio/XAudio/XAudioDevice.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Audio/XAudio/XAudioDevice.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Core/Link.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Core/Link.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Core/Math.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Core/Math.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Core/ModAPI.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Core/ModAPI.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Core/Reader.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Core/Reader.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Core/RetroEngine.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Core/RetroEngine.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Dev/Debug.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Dev/Debug.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Dev/DevFont.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Graphics/Animation.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Graphics/Animation.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Graphics/DX11/DX11RenderDevice.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Graphics/DX11/DX11RenderDevice.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Graphics/DX9/DX9RenderDevice.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Graphics/DX9/DX9RenderDevice.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Graphics/Drawing.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Graphics/Drawing.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Graphics/NX/NXRenderDevice.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Graphics/NX/NXRenderDevice.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Graphics/Palette.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Graphics/Palette.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Graphics/SDL2/SDL2RenderDevice.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Graphics/SDL2/SDL2RenderDevice.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Graphics/Scene3D.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Graphics/Scene3D.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Graphics/Sprite.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Graphics/Sprite.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Graphics/Video.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Graphics/Video.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Input/GLFW/GLFWInputDevice.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Input/GLFW/GLFWInputDevice.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Input/Input.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Input/Input.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Input/Keyboard/KBInputDevice.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Input/Keyboard/KBInputDevice.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Input/NX/NXInputDevice.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Input/NX/NXInputDevice.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Input/RawInput/RawInputDevice.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Input/RawInput/RawInputDevice.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Input/SDL2/SDL2InputDevice.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Input/SDL2/SDL2InputDevice.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Input/Steam/SteamInputDevice.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Input/Steam/SteamInputDevice.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Input/XInput/XInputDevice.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Input/XInput/XInputDevice.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Scene/Collision.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Scene/Collision.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Scene/Object.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Scene/Object.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Scene/Objects/DefaultObject.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Scene/Objects/DefaultObject.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Scene/Objects/DevOutput.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Scene/Objects/DevOutput.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Scene/Scene.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Scene/Scene.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Storage/Storage.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Storage/Storage.hpp" />
+		<Unit filename="../RSDKv5/RSDK/Storage/Text.cpp" />
+		<Unit filename="../RSDKv5/RSDK/Storage/Text.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Core/UserAchievements.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Core/UserAchievements.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Core/UserCore.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Core/UserCore.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Core/UserLeaderboards.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Core/UserLeaderboards.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Core/UserPresence.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Core/UserPresence.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Core/UserStats.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Core/UserStats.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Core/UserStorage.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Core/UserStorage.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Dummy/DummyAchievements.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Dummy/DummyAchievements.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Dummy/DummyCore.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Dummy/DummyCore.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Dummy/DummyLeaderboards.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Dummy/DummyLeaderboards.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Dummy/DummyPresence.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Dummy/DummyPresence.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Dummy/DummyStats.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Dummy/DummyStats.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Dummy/DummyStorage.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Dummy/DummyStorage.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/EOS/EOSAchievements.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/EOS/EOSAchievements.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/EOS/EOSCore.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/EOS/EOSCore.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/EOS/EOSLeaderboards.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/EOS/EOSLeaderboards.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/EOS/EOSPresence.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/EOS/EOSPresence.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/EOS/EOSStats.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/EOS/EOSStats.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/EOS/EOSStorage.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/EOS/EOSStorage.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/NX/NXAchievements.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/NX/NXAchievements.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/NX/NXCore.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/NX/NXCore.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/NX/NXLeaderboards.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/NX/NXLeaderboards.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/NX/NXPresence.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/NX/NXPresence.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/NX/NXStats.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/NX/NXStats.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/NX/NXStorage.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/NX/NXStorage.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Steam/SteamAchievements.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Steam/SteamAchievements.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Steam/SteamCore.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Steam/SteamCore.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Steam/SteamLeaderboards.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Steam/SteamLeaderboards.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Steam/SteamPresence.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Steam/SteamPresence.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Steam/SteamStats.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Steam/SteamStats.hpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Steam/SteamStorage.cpp" />
+		<Unit filename="../RSDKv5/RSDK/User/Steam/SteamStorage.hpp" />
+		<Unit filename="../RSDKv5/main.cpp" />
+		<Unit filename="../RSDKv5/main.hpp" />
+		<Unit filename="../dependencies/all/iniparser/dictionary.cpp" />
+		<Unit filename="../dependencies/all/iniparser/dictionary.h" />
+		<Unit filename="../dependencies/all/iniparser/iniparser.cpp" />
+		<Unit filename="../dependencies/all/iniparser/iniparser.h" />
+		<Unit filename="../dependencies/all/miniz/miniz.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../dependencies/all/miniz/miniz.h" />
+		<Unit filename="../dependencies/all/stb_vorbis/stb_vorbis.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../dependencies/all/tinyxml2/tinyxml2.cpp" />
+		<Unit filename="../dependencies/all/tinyxml2/tinyxml2.h" />
+		<Unit filename="RSDKv5U.rc" />
+		<Unit filename="resource.h" />
+		<Extensions>
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

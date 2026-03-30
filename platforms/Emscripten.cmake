@@ -4,8 +4,8 @@ project(RetroEngine)
 
 add_executable(RetroEngine ${RETRO_FILES})
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O3")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -Oz -g2 -fno-strict-aliasing -D_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS -D_LIBCPP_NO_ABI_TAG")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Oz -g2 -fno-strict-aliasing -D_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS -D_LIBCPP_NO_ABI_TAG")
 
 # we're gonna handle libtheora here, because usually, COMPILE_THEORA directs
 # to the android dependencies, can't just set THEORA_DIR - because CMakeLists.txt
@@ -57,6 +57,9 @@ set(EMSCRIPTEN_FLAGS
     -DRETRO_STANDALONE=1
     -DRETRO_USE_MOD_LOADER=1
     -DRETRO_VER_EGS=1
+    -DMANIA_PREPLUS=0
+    -DRETRO_REV02=1
+    -DRETRO_REV0U=1
 )
 
 set(emsc_link_options
@@ -73,15 +76,17 @@ set(emsc_link_options
     -lm
     -lidbfs.js
     #-flto
-    -O3
-    -sASSERTIONS=0
+    -Oz
+    -sASSERTIONS=2
+    -sSAFE_HEAP=1
     -sABORTING_MALLOC=0
     -sEXPORTED_RUNTIME_METHODS=['HEAPF32','HEAP32','HEAPU8','HEAP8','HEAP16','HEAPU16','HEAPU32','HEAPF64','ccall','cwrap']
-    -pthread
-#    -g                             # <--- ADDS DEBUG SYMBOLS (See function names in error)
+    -pthread   
+    -g2                             # <--- ADDS DEBUG SYMBOLS (See function names in error)
     -Wl,--whole-archive
     ${THEORA_LIB}
     -Wl,--no-whole-archive
+    -sALLOW_TABLE_GROWTH=1
 )
 
 target_compile_options(RetroEngine PRIVATE ${EMSCRIPTEN_FLAGS})
