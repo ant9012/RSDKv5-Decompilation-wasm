@@ -250,12 +250,15 @@ void RSDK::ProcessVideo()
                     break;
 
                 case TH_PF_420:
-                    RenderDevice::SetupVideoTexture_YUV420(
-                        yuv[0].width, yuv[0].height, &yuv[0].data[dataPos],
-                        &yuv[1].data[yuv[1].stride * (VideoManager::ti.pic_y >> 1) + (VideoManager::ti.pic_x >> 1)],
-                        &yuv[2].data[yuv[1].stride * (VideoManager::ti.pic_y >> 1) + (VideoManager::ti.pic_x >> 1)], yuv[0].stride, yuv[1].stride,
-                        yuv[2].stride);
-                    break;
+    RenderDevice::SetupVideoTexture_YUV420(
+        yuv[0].width, yuv[0].height, 
+        &yuv[0].data[dataPos], // Y Plane (Brightness)
+        &yuv[1].data[yuv[1].stride * (VideoManager::ti.pic_y >> 1) + (VideoManager::ti.pic_x >> 1)], // U Plane (Color 1)
+        &yuv[2].data[yuv[2].stride * (VideoManager::ti.pic_y >> 1) + (VideoManager::ti.pic_x >> 1)], // V Plane (Color 2) - FIXED STRIDE HERE
+        yuv[0].stride, 
+        yuv[1].stride,
+        yuv[2].stride);
+    break;
             }
         }
 
