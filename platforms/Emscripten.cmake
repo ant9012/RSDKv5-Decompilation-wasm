@@ -83,6 +83,7 @@ set(emsc_link_options
     -Wl,--whole-archive
     ${THEORA_LIB}
     -Wl,--no-whole-archive
+    -sEMULATE_FUNCTION_POINTER_CASTS=1
 )
 
 target_compile_options(RetroEngine PRIVATE ${EMSCRIPTEN_FLAGS})
