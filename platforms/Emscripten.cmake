@@ -84,6 +84,7 @@ set(emsc_link_options
     ${THEORA_LIB}
     -Wl,--no-whole-archive
     -sEMULATE_FUNCTION_POINTER_CASTS=1
+    -sBINARYEN_EXTRA_PASSES=--pass-arg=max-func-params@64
 )
 
 target_compile_options(RetroEngine PRIVATE ${EMSCRIPTEN_FLAGS})
