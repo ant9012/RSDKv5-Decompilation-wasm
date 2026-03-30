@@ -1,3 +1,7 @@
+#ifdef _INTELLISENSE
+#include "SDL2RenderDevice.hpp"
+//#include "RetroEngine.hpp"
+#endif
 
 SDL_Window *RenderDevice::window     = nullptr;
 SDL_Renderer *RenderDevice::renderer = nullptr;
@@ -16,10 +20,35 @@ RenderVertex RenderDevice::vertexBuffer[!RETRO_REV02 ? 24 : 60];
 
 uint8 RenderDevice::lastTextureFormat = -1;
 
+#ifdef __EMSCRIPTEN__
+#include <GLES2/gl2.h>
+GLuint RenderDevice::glScreenTextures[SCREEN_COUNT];
+GLuint RenderDevice::glImageTexture;
+GLuint RenderDevice::glYTextureID = 0; 
+GLuint RenderDevice::glUTextureID = 0; 
+GLuint RenderDevice::glVTextureID = 0; 
+GLuint RenderDevice::glVBO;
+int32 RenderDevice::lastGLShaderID = -1;
+float RenderDevice::glTextureW = 512.0f;
+float RenderDevice::glTextureH     = 256.0f;
+float RenderDevice::glVideoU = 1.0f;
+float RenderDevice::glVideoV = 1.0f;
+#endif
+
 #define NORMALIZE(val, minVal, maxVal) ((float)(val) - (float)(minVal)) / ((float)(maxVal) - (float)(minVal))
 
 bool RenderDevice::Init()
 {
+    #ifdef __EMSCRIPTEN__
+    // Force 3x Scale to fix up the display because 1x looks fucked
+    if (videoSettings.windowWidth <= 0) {
+        int multiplier = 3;
+        videoSettings.windowWidth  = videoSettings.pixWidth * multiplier;
+        videoSettings.windowHeight = videoSettings.pixHeight * multiplier;
+        videoSettings.windowed     = true;
+    }
+#endif
+    
     const char *gameTitle = gameVerInfo.gameTitle;
 
     SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
@@ -78,6 +107,12 @@ bool RenderDevice::Init()
 
 void RenderDevice::CopyFrameBuffer()
 {
+#ifdef __EMSCRIPTEN__
+    for (int32 s = 0; s < videoSettings.screenCount; ++s) {
+        glBindTexture(GL_TEXTURE_2D, glScreenTextures[s]);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, screens[s].pitch, SCREEN_YSIZE, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, screens[s].frameBuffer);
+    }
+#else
     int32 pitch    = 0;
     uint16 *pixels = NULL;
 
@@ -93,6 +128,7 @@ void RenderDevice::CopyFrameBuffer()
 
         SDL_UnlockTexture(screenTexture[s]);
     }
+#endif
 }
 
 void RenderDevice::FlipScreen()
@@ -104,10 +140,109 @@ void RenderDevice::FlipScreen()
         return;
     }
 
+#ifdef __EMSCRIPTEN__
+    // 1. Setup Shader and basic uniforms
+    int32 shaderID = videoSettings.shaderID;
+    if (shaderID >= shaderCount) shaderID = 0;
+
+    if (videoSettings.shaderSupport && shaderCount > 0) {
+        if (lastGLShaderID != shaderID) {
+            lastGLShaderID = shaderID;
+            glUseProgram(shaderList[shaderID].programID);
+
+            for (int32 i = 0; i < SCREEN_COUNT; ++i) {
+                glBindTexture(GL_TEXTURE_2D, glScreenTextures[i]);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, shaderList[shaderID].linear ? GL_LINEAR : GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, shaderList[shaderID].linear ? GL_LINEAR : GL_NEAREST);
+            }
+        }
+
+        GLuint prog = shaderList[shaderID].programID;
+        glUniform2f(glGetUniformLocation(prog, "textureSize"), glTextureW, glTextureH);
+        glUniform2f(glGetUniformLocation(prog, "pixelSize"), (float)screens[0].size.x, (float)screens[0].size.y);
+        glUniform2f(glGetUniformLocation(prog, "viewSize"), viewSize.x, viewSize.y);
+        glUniform1f(glGetUniformLocation(prog, "screenDim"), videoSettings.dimMax * videoSettings.dimPercent);
+    }
+
+    // 2. Clear and Setup Vertex Attributes
+    glClear(GL_COLOR_BUFFER_BIT);
+    glBindBuffer(GL_ARRAY_BUFFER, glVBO);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+// 3. YUV Binding Logic
+    // Notice we added screenCount == 0. This tells OpenGL to exit video mode when you press Enter!
+    if (videoSettings.screenCount == 0 && lastTextureFormat == SHADER_YUV_420) {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, glYTextureID);
+        
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, glUTextureID);
+        
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, glVTextureID);
+
+        GLuint prog = shaderList[shaderID].programID;
+        glUseProgram(prog);
+        
+        glUniform1i(glGetUniformLocation(prog, "texY"), 0);
+        glUniform1i(glGetUniformLocation(prog, "texU"), 1);
+        glUniform1i(glGetUniformLocation(prog, "texV"), 2);
+
+        float uMax = glVideoU;
+        float vMax = glVideoV;
+        float videoVerts[] = {
+            +1.0f, -1.0f, 1.0f, uMax, vMax,
+            +1.0f, +1.0f, 1.0f, uMax, 0.0f,
+            -1.0f, +1.0f, 1.0f, 0.0f, 0.0f,
+            +1.0f, -1.0f, 1.0f, uMax, vMax,
+            -1.0f, -1.0f, 1.0f, 0.0f, vMax,
+            -1.0f, +1.0f, 1.0f, 0.0f, 0.0f,
+        };
+        glBindBuffer(GL_ARRAY_BUFFER, glVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(videoVerts), videoVerts);
+        
+        glActiveTexture(GL_TEXTURE0);
+    }
+    else {
+        // --- STANDARD GAMEPLAY RESUME ---
+        
+        // 1. Force OpenGL back to the standard game shader so it stops trying to use the YUV one!
+        glUseProgram(shaderList[shaderID].programID);
+
+        glActiveTexture(GL_TEXTURE0);
+        
+        // If screenCount is 0 but it's not a video, it's a static title screen image
+        if (videoSettings.screenCount == 0) {
+            glBindTexture(GL_TEXTURE_2D, glImageTexture);
+        } else {
+            glBindTexture(GL_TEXTURE_2D, glScreenTextures[0]);
+        }
+
+        // 2. Revert back to your custom float array! The native C++ RenderVertex struct breaks WebGL.
+        float uMax = (float)screens[0].size.x / glTextureW;
+        float vMax = (float)screens[0].size.y / glTextureH;
+        float quadVerts[] = {
+            +1.0f, -1.0f, 1.0f, uMax, vMax,
+            +1.0f, +1.0f, 1.0f, uMax, 0.0f,
+            -1.0f, +1.0f, 1.0f, 0.0f, 0.0f,
+            +1.0f, -1.0f, 1.0f, uMax, vMax,
+            -1.0f, -1.0f, 1.0f, 0.0f, vMax,
+            -1.0f, +1.0f, 1.0f, 0.0f, 0.0f,
+        };
+        glBindBuffer(GL_ARRAY_BUFFER, glVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(quadVerts), quadVerts);
+    }
+
+    // 4. Draw and Swap (Fixed back to standard 6 vertices!)
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    SDL_GL_SwapWindow(window);
+#else
+    // --- NON-EMSCRIPTEN CODE ---
     float dimAmount = videoSettings.dimMax * videoSettings.dimPercent;
 
-    // Clear the screen. This is needed to keep the
-    // pillarboxes in fullscreen from displaying garbage data.
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0xFF);
     SDL_RenderClear(renderer);
 
@@ -198,16 +333,15 @@ void RenderDevice::FlipScreen()
     int32 startVert = 0;
     SDL_Rect src, dst;
 
-    // some cheating for today
 #define _SET_RECTS                                                                                                                                   \
     dst.x = vertexBuffer[startVert].pos.x;                                                                                                           \
     dst.y = vertexBuffer[startVert].pos.y;                                                                                                           \
     dst.w = vertexBuffer[startVert + 2].pos.x - dst.x;                                                                                               \
     dst.h = vertexBuffer[startVert + 2].pos.y - dst.y;                                                                                               \
-    src.x = vertexBuffer[startVert].tex.x * textureSize.x;                                                                                           \
-    src.y = vertexBuffer[startVert].tex.y * textureSize.y;                                                                                           \
-    src.w = vertexBuffer[startVert + 2].tex.x * textureSize.x - src.x;                                                                               \
-    src.h = vertexBuffer[startVert + 2].tex.y * textureSize.y - src.y;
+    src.x = vertexBuffer[startVert].tex.x * 1024;                                                                                           \
+    src.y = vertexBuffer[startVert].tex.y * 512;                                                                                           \
+    src.w = vertexBuffer[startVert + 2].tex.x * 1024 - src.x;                                                                               \
+    src.h = vertexBuffer[startVert + 2].tex.y * 512 - src.y;
 
     switch (videoSettings.screenCount) {
         default:
@@ -218,15 +352,18 @@ void RenderDevice::FlipScreen()
             startVert = 18;
 #endif
             _SET_RECTS;
-            src.w = vertexBuffer[startVert + 2].tex.x * 1024 - src.x;
-            src.h = vertexBuffer[startVert + 2].tex.y * 512 - src.y;
-            SDL_RenderCopy(renderer, imageTexture, &src, &dst);
+            if (lastTextureFormat == SHADER_YUV_420) {
+                // Draw the video texture directly to the full renderer target
+                SDL_RenderCopy(renderer, imageTexture, NULL, NULL);
+            }
+            else {
+                SDL_RenderCopy(renderer, imageTexture, &src, &dst);
+            }
             break;
 
         case 1:
             startVert = 0;
             _SET_RECTS;
-
             SDL_RenderCopy(renderer, screenTexture[0], &src, &dst);
             break;
 
@@ -237,7 +374,6 @@ void RenderDevice::FlipScreen()
             startVert = 6;
 #endif
             _SET_RECTS;
-
             SDL_RenderCopy(renderer, screenTexture[0], &src, &dst);
 
 #if RETRO_REV02
@@ -246,7 +382,6 @@ void RenderDevice::FlipScreen()
             startVert = 12;
 #endif
             _SET_RECTS;
-
             SDL_RenderCopy(renderer, screenTexture[1], &src, &dst);
             break;
 
@@ -254,42 +389,33 @@ void RenderDevice::FlipScreen()
         case 3:
             startVert = startVertex_3P[0];
             _SET_RECTS;
-
             SDL_RenderCopy(renderer, screenTexture[0], &src, &dst);
 
             startVert = startVertex_3P[1];
             _SET_RECTS;
-
             SDL_RenderCopy(renderer, screenTexture[1], &src, &dst);
 
             startVert = startVertex_3P[2];
             _SET_RECTS;
-
             SDL_RenderCopy(renderer, screenTexture[2], &src, &dst);
-
             break;
 
         case 4:
             startVert = 30;
             _SET_RECTS;
-
             SDL_RenderCopy(renderer, screenTexture[0], &src, &dst);
 
             startVert = 36;
             _SET_RECTS;
-
             SDL_RenderCopy(renderer, screenTexture[1], &src, &dst);
 
             startVert = 42;
             _SET_RECTS;
-
             SDL_RenderCopy(renderer, screenTexture[2], &src, &dst);
 
             startVert = 48;
             _SET_RECTS;
-
             SDL_RenderCopy(renderer, screenTexture[3], &src, &dst);
-
             break;
 #endif
     }
@@ -298,8 +424,8 @@ void RenderDevice::FlipScreen()
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0xFF - (dimAmount * 0xFF));
         SDL_RenderFillRect(renderer, NULL);
     }
-    // no change here
     SDL_RenderPresent(renderer);
+#endif 
 }
 
 void RenderDevice::Release(bool32 isRefresh)
@@ -410,10 +536,8 @@ void RenderDevice::InitVertexBuffer()
     RenderVertex vertBuffer[sizeof(rsdkVertexBuffer) / sizeof(RenderVertex)];
     memcpy(vertBuffer, rsdkVertexBuffer, sizeof(rsdkVertexBuffer));
 
-    // ignore the last 6 verts, they're scaled to the 1024x512 textures already!
     int32 vertCount = (RETRO_REV02 ? 60 : 24) - 6;
 
-    // Regular in-game screen de-normalization stuff
     for (int32 v = 0; v < vertCount; ++v) {
         RenderVertex *vertex = &vertBuffer[v];
         vertex->pos.x        = NORMALIZE(vertex->pos.x, -1.0, 1.0) * videoSettings.pixWidth;
@@ -426,13 +550,11 @@ void RenderDevice::InitVertexBuffer()
             vertex->tex.y = screens[0].size.y * (1.0 / textureSize.y);
     }
 
-    // Fullscreen Image/Video de-normalization stuff
     for (int32 v = 0; v < 6; ++v) {
         RenderVertex *vertex = &vertBuffer[vertCount + v];
         vertex->pos.x        = NORMALIZE(vertex->pos.x, -1.0, 1.0) * videoSettings.pixWidth;
         vertex->pos.y        = (1.0 - NORMALIZE(vertex->pos.y, -1.0, 1.0)) * SCREEN_YSIZE;
 
-        // Set the texture to fill the entire screen with all 1024x512 pixels
         if (vertex->tex.x)
             vertex->tex.x = 1.0f;
 
@@ -445,7 +567,11 @@ void RenderDevice::InitVertexBuffer()
 
 bool RenderDevice::InitGraphicsAPI()
 {
+#ifdef __EMSCRIPTEN__
+    videoSettings.shaderSupport = true;
+#else
     videoSettings.shaderSupport = false;
+#endif
 
     viewSize.x = 0;
     viewSize.y = 0;
@@ -547,16 +673,147 @@ bool RenderDevice::InitGraphicsAPI()
     videoSettings.viewportW = 1.0 / viewSize.x;
     videoSettings.viewportH = 1.0 / viewSize.y;
 
+#ifdef __EMSCRIPTEN__
+    glTextureW = textureSize.x;
+    glTextureH = textureSize.y;
+
+    glGenTextures(SCREEN_COUNT, glScreenTextures);
+    for (int32 s = 0; s < SCREEN_COUNT; ++s) {
+        glBindTexture(GL_TEXTURE_2D, glScreenTextures[s]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, (int)glTextureW, (int)glTextureH, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    }
+
+    float uMax = screens[0].size.x / glTextureW;
+    float vMax = screens[0].size.y / glTextureH;
+    float quadVerts[] = {
+        +1.0f, -1.0f, 1.0f, uMax, vMax,
+        +1.0f, +1.0f, 1.0f, uMax, 0.0f,
+        -1.0f, +1.0f, 1.0f, 0.0f, 0.0f,
+        +1.0f, -1.0f, 1.0f, uMax, vMax,
+        -1.0f, -1.0f, 1.0f, 0.0f, vMax,
+        -1.0f, +1.0f, 1.0f, 0.0f, 0.0f,
+    };
+    glGenBuffers(1, &glVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, glVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVerts), quadVerts, GL_STATIC_DRAW);
+    lastGLShaderID = -1;
+#endif
+
     return true;
 }
 
+#ifdef __EMSCRIPTEN__
+static const char *_emsc_glVersion = "#version 100\n#extension GL_OES_standard_derivatives : enable\n#define in_V attribute\n#define out varying\n#define in_F varying\n";
+static const char *_emsc_glDefine =
+#if RETRO_REV02
+    "#define RETRO_REV02 (1)\n";
+#else
+    "\n";
+#endif
+
+void RenderDevice::LoadShader(const char *fileName, bool32 linear)
+{
+    char fullFilePath[0x100];
+    FileInfo info;
+
+    for (int32 i = 0; i < shaderCount; ++i) {
+        if (strcmp(shaderList[i].name, fileName) == 0)
+            return;
+    }
+
+    if (shaderCount == SHADER_COUNT)
+        return;
+
+    ShaderEntry *shader = &shaderList[shaderCount];
+    shader->linear      = linear;
+    sprintf_s(shader->name, sizeof(shader->name), "%s", fileName);
+
+    GLint success;
+    char infoLog[0x1000];
+    GLuint vert, frag;
+
+    sprintf_s(fullFilePath, sizeof(fullFilePath), "Data/Shaders/OGL/None.vs");
+    InitFileInfo(&info);
+    if (LoadFile(&info, fullFilePath, FMODE_RB)) {
+        uint8 *fileData = NULL;
+        AllocateStorage((void **)&fileData, info.fileSize + 1, DATASET_TMP, false);
+        ReadBytes(&info, fileData, info.fileSize);
+        fileData[info.fileSize] = 0;
+        CloseFile(&info);
+
+        const GLchar *glchar[] = { _emsc_glVersion, _emsc_glDefine, "precision mediump float;\n", (const GLchar *)fileData };
+        vert = glCreateShader(GL_VERTEX_SHADER);
+        glShaderSource(vert, 4, glchar, NULL);
+        glCompileShader(vert);
+        RemoveStorageEntry((void **)&fileData);
+
+        glGetShaderiv(vert, GL_COMPILE_STATUS, &success);
+        if (!success) {
+            glGetShaderInfoLog(vert, 0x1000, NULL, infoLog);
+            PrintLog(PRINT_NORMAL, "Vertex shader compiling failed:\n%s", infoLog);
+            return;
+        }
+    }
+    else
+        return;
+
+    sprintf_s(fullFilePath, sizeof(fullFilePath), "Data/Shaders/OGL/%s.fs", fileName);
+    InitFileInfo(&info);
+    if (LoadFile(&info, fullFilePath, FMODE_RB)) {
+        uint8 *fileData = NULL;
+        AllocateStorage((void **)&fileData, info.fileSize + 1, DATASET_TMP, false);
+        ReadBytes(&info, fileData, info.fileSize);
+        fileData[info.fileSize] = 0;
+        CloseFile(&info);
+
+        const GLchar *glchar[] = { _emsc_glVersion, _emsc_glDefine, "precision mediump float;\n", (const GLchar *)fileData };
+        frag = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(frag, 4, glchar, NULL);
+        glCompileShader(frag);
+        RemoveStorageEntry((void **)&fileData);
+
+        glGetShaderiv(frag, GL_COMPILE_STATUS, &success);
+        if (!success) {
+            glGetShaderInfoLog(frag, 0x1000, NULL, infoLog);
+            PrintLog(PRINT_NORMAL, "Fragment shader compiling failed:\n%s", infoLog);
+            return;
+        }
+    }
+    else
+        return;
+
+    shader->programID = glCreateProgram();
+    glAttachShader(shader->programID, vert);
+    glAttachShader(shader->programID, frag);
+
+    glBindAttribLocation(shader->programID, 0, "in_pos");
+    glBindAttribLocation(shader->programID, 1, "in_UV");
+
+    glLinkProgram(shader->programID);
+    glGetProgramiv(shader->programID, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(shader->programID, 0x1000, NULL, infoLog);
+        PrintLog(PRINT_NORMAL, "Shader linking failed:\n%s", infoLog);
+        return;
+    }
+    glDeleteShader(vert);
+    glDeleteShader(frag);
+
+    PrintLog(PRINT_NORMAL, "Loaded shader: %s (ID: %d)", fileName, shaderCount);
+    shaderCount++;
+}
+#else
 void RenderDevice::LoadShader(const char *fileName, bool32 linear) { PrintLog(PRINT_NORMAL, "This render device does not support shaders!"); }
+#endif
 
 bool RenderDevice::InitShaders()
 {
     int32 maxShaders = 0;
 #if RETRO_USE_MOD_LOADER
-    // who knows maybe SDL3 will have shaders
     shaderCount = 0;
 #endif
 
@@ -567,7 +824,6 @@ bool RenderDevice::InitShaders()
         LoadShader("CRT-Yee64", true);
 
 #if RETRO_USE_MOD_LOADER
-        // a place for mods to load custom shaders
         RunModCallbacks(MODCB_ONSHADERLOAD, NULL);
         userShaderCount = shaderCount;
 #endif
@@ -668,7 +924,7 @@ void RenderDevice::GetDisplays()
     if (!foundFullScreenDisplay) {
         videoSettings.fsWidth     = 0;
         videoSettings.fsHeight    = 0;
-        videoSettings.refreshRate = 60; // 0;
+        videoSettings.refreshRate = 60;
     }
 }
 
@@ -924,7 +1180,6 @@ void RenderDevice::ProcessEvent(SDL_Event event)
 
                 case SDL_SCANCODE_F5:
                     if (engine.devMenu) {
-                        // Quick-Reload
 #if RETRO_USE_MOD_LOADER
                         if (event.key.keysym.mod & KMOD_LCTRL)
                             RefreshModFolders();
@@ -1078,51 +1333,101 @@ void RenderDevice::SetupImageTexture(int32 width, int32 height, uint8 *imagePixe
     SDL_UnlockTexture(imageTexture);
 }
 
-void RenderDevice::SetupVideoTexture_YUV420(int32 width, int32 height, uint8 *yPlane, uint8 *uPlane, uint8 *vPlane, int32 strideY, int32 strideU,
-                                            int32 strideV)
+void RenderDevice::SetupVideoTexture_YUV420(int32 width, int32 height, uint8 *yPlane, uint8 *uPlane, uint8 *vPlane, int32 strideY, int32 strideU, int32 strideV)
 {
-    if (lastTextureFormat != SHADER_YUV_420) {
-        if (imageTexture)
-            SDL_DestroyTexture(imageTexture);
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+#ifdef __EMSCRIPTEN__
+    if (!glYTextureID) glGenTextures(1, &glYTextureID);
+    if (!glUTextureID) glGenTextures(1, &glUTextureID);
+    if (!glVTextureID) glGenTextures(1, &glVTextureID);
 
-        imageTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_YV12, SDL_TEXTUREACCESS_STREAMING, width, height);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glVideoU = 1.0f; glVideoV = 1.0f; 
 
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
-        lastTextureFormat = SHADER_YUV_420;
-    }
+    auto uploadPlane = [](GLuint texID, int w, int h, uint8* data, int32 stride) {
+        glBindTexture(GL_TEXTURE_2D, texID);
+        if (w == stride) {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, w, h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+        } else {
+            static std::vector<uint8> pack;
+            if (pack.size() < w * h) pack.resize(w * h);
+            for (int i = 0; i < h; i++) memcpy(pack.data() + (i * w), data + (i * stride), w);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, w, h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, pack.data());
+        }
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    };
 
-    SDL_UpdateYUVTexture(imageTexture, NULL, yPlane, strideY, uPlane, strideU, vPlane, strideV);
+    uploadPlane(glYTextureID, width, height, yPlane, strideY);
+    uploadPlane(glUTextureID, width >> 1, height >> 1, uPlane, strideU); // Half Width, Half Height
+    uploadPlane(glVTextureID, width >> 1, height >> 1, vPlane, strideV); // Half Width, Half Height
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    lastTextureFormat = SHADER_YUV_420; // Force FlipScreen to use our shader
+#endif
 }
-void RenderDevice::SetupVideoTexture_YUV422(int32 width, int32 height, uint8 *yPlane, uint8 *uPlane, uint8 *vPlane, int32 strideY, int32 strideU,
-                                            int32 strideV)
+
+void RenderDevice::SetupVideoTexture_YUV422(int32 width, int32 height, uint8 *yPlane, uint8 *uPlane, uint8 *vPlane, int32 strideY, int32 strideU, int32 strideV)
 {
-    if (lastTextureFormat != SHADER_YUV_422) {
-        if (imageTexture)
-            SDL_DestroyTexture(imageTexture);
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+#ifdef __EMSCRIPTEN__
+    // Setup identical to 420, but height is NOT bit-shifted
+    if (!glYTextureID) glGenTextures(1, &glYTextureID);
+    if (!glUTextureID) glGenTextures(1, &glUTextureID);
+    if (!glVTextureID) glGenTextures(1, &glVTextureID);
 
-        imageTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_YV12, SDL_TEXTUREACCESS_STREAMING, width, height);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glVideoU = 1.0f; glVideoV = 1.0f;
 
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
-        lastTextureFormat = SHADER_YUV_422;
-    }
-
-    SDL_UpdateYUVTexture(imageTexture, NULL, yPlane, strideY, uPlane, strideU, vPlane, strideV);
+    auto uploadPlane = [](GLuint texID, int w, int h, uint8* data, int32 stride) {
+        glBindTexture(GL_TEXTURE_2D, texID);
+        if (w == stride) {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, w, h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+        } else {
+            static std::vector<uint8> pack;
+            if (pack.size() < w * h) pack.resize(w * h);
+            for (int i = 0; i < h; i++) memcpy(pack.data() + (i * w), data + (i * stride), w);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, w, h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, pack.data());
+        }
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    };
+    
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    lastTextureFormat = SHADER_YUV_420; // Reuse the 420 Shader!
+#endif
 }
-void RenderDevice::SetupVideoTexture_YUV444(int32 width, int32 height, uint8 *yPlane, uint8 *uPlane, uint8 *vPlane, int32 strideY, int32 strideU,
-                                            int32 strideV)
+
+void RenderDevice::SetupVideoTexture_YUV444(int32 width, int32 height, uint8 *yPlane, uint8 *uPlane, uint8 *vPlane, int32 strideY, int32 strideU, int32 strideV)
 {
-    if (lastTextureFormat != SHADER_YUV_444) {
-        if (imageTexture)
-            SDL_DestroyTexture(imageTexture);
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+#ifdef __EMSCRIPTEN__
+    // Setup identical to 420, but neither width nor height are bit-shifted
+    if (!glYTextureID) glGenTextures(1, &glYTextureID);
+    if (!glUTextureID) glGenTextures(1, &glUTextureID);
+    if (!glVTextureID) glGenTextures(1, &glVTextureID);
 
-        imageTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_YV12, SDL_TEXTUREACCESS_STREAMING, width, height);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glVideoU = 1.0f; glVideoV = 1.0f;
 
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
-        lastTextureFormat = SHADER_YUV_444;
-    }
-
-    SDL_UpdateYUVTexture(imageTexture, NULL, yPlane, strideY, uPlane, strideU, vPlane, strideV);
+    auto uploadPlane = [](GLuint texID, int w, int h, uint8* data, int32 stride) {
+        glBindTexture(GL_TEXTURE_2D, texID);
+        if (w == stride) {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, w, h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+        } else {
+            static std::vector<uint8> pack;
+            if (pack.size() < w * h) pack.resize(w * h);
+            for (int i = 0; i < h; i++) memcpy(pack.data() + (i * w), data + (i * stride), w);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, w, h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, pack.data());
+        }
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    };
+    
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    lastTextureFormat = SHADER_YUV_420; // Reuse the 420 Shader!
+#endif
 }
