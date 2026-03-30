@@ -41,6 +41,7 @@ jobs:
         with:
           name: v5-windows
           path: artifacts
+          
   v5-windows-x64:
     runs-on: windows-latest
     steps:
@@ -65,6 +66,7 @@ jobs:
         with:
           name: v5-windows-x64
           path: artifacts
+          
   v5-linux:
     runs-on: ubuntu-latest
     steps:
@@ -82,8 +84,6 @@ jobs:
           cmake --build build_v5 --parallel
           cmake -B build_v5U ${{env.GENERAL_FLAGS}} ${{env.GENERAL_LINUX_FLAGS}} ${{env.V5U_FLAGS}}
           cmake --build build_v5U --parallel
-      # tar the executables so that they don't lose exec permissions
-      # see: https://github.com/actions/upload-artifact?tab=readme-ov-file#permission-loss
       - name: Move artifacts
         run: |
           mkdir artifacts
@@ -94,6 +94,7 @@ jobs:
         with:
           name: v5-linux
           path: linux.tar.gz
+
   v5-android:
     runs-on: ubuntu-latest
     steps:
@@ -162,11 +163,47 @@ jobs:
           cp -r RSDKv5/Shaders/OGL artifacts/mods/GLShaders/Data/Shaders
           printf "Name=GLShaders\nDescription=OGLShaders\nAuthor=Ducky\nVersion=1.0.0\nTargetVersion=5\n" > artifacts/mods/GLShaders/mod.ini
           printf "[Mods]\nMTC=y\nUWM=y\nGLShaders=y\n" > artifacts/mods/modconfig.ini
-      # HACK: Remove RSDKv5 symlink in Mania to prevent warning in post checkout cleanup
       - name: Cleanup
         run: rm $PWD/Sonic-Mania-Decompilation/dependencies/RSDKv5
       - name: Upload artifact Android
         uses: actions/upload-artifact@v4
         with:
           name: v5-android
+          path: artifacts
+
+  v5-emscripten:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        
+      - name: Install dependencies
+        run: |
+          mkdir -p dependencies/all
+          curl -L -O https://downloads.xiph.org/releases/theora/libtheora-1.1.1.zip
+          unzip libtheora-1.1.1.zip
+          mv libtheora-1.1.1 dependencies/all/libtheora
+          
+      - name: Build RSDKv5 + U Emscripten
+        run: |
+          emcmake cmake -B build_v5 -DCMAKE_C_FLAGS="-s USE_OGG=1" ${{env.GENERAL_FLAGS}} ${{env.V5_FLAGS}}
+          cmake --build build_v5 --config release --parallel
+          emcmake cmake -B build_v5U -DCMAKE_C_FLAGS="-s USE_OGG=1" ${{env.GENERAL_FLAGS}} ${{env.V5U_FLAGS}}
+          cmake --build build_v5U --config release --parallel
+          
+      - name: Move artifacts
+        run: |
+          mkdir artifacts
+          find ./build_v5 -maxdepth 1 \( -name "*.js" -o -name "*.wasm" \) -exec cp {} ./artifacts/ \;
+          find ./build_v5U -maxdepth 1 \( -name "*.js" -o -name "*.wasm" \) -exec cp {} ./artifacts/ \;
+          
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: v5-emscripten
           path: artifacts
