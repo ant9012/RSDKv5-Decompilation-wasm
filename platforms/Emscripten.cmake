@@ -71,6 +71,7 @@ set(emsc_link_options
     -sUSE_PTHREADS=1
     -sPTHREAD_POOL_SIZE=4
     -DRETRO_REVISION=3
+    -sASYNCIFY
     -lm
     -lidbfs.js
     #-flto
