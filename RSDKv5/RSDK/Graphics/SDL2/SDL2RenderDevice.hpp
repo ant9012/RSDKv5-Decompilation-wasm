@@ -1,4 +1,11 @@
+#ifdef __EMSCRIPTEN__
+#include <GLES2/gl2.h>
+struct ShaderEntry : ShaderEntryBase {
+    GLuint programID;
+};
+#else
 using ShaderEntry = ShaderEntryBase;
+#endif
 
 class RenderDevice : public RenderDeviceBase
 {
@@ -6,7 +13,6 @@ public:
     struct WindowInfo {
         union {
             struct {
-                // i wanna do uint32 : 32 but idk if other compilers like that
                 uint32 _pad;
                 int32 width;
                 int32 height;
@@ -76,6 +82,20 @@ private:
 
     static RenderVertex vertexBuffer[!RETRO_REV02 ? 24 : 60];
 
-    // thingo majigo for handling video/image swapping
     static uint8 lastTextureFormat;
+
+#ifdef __EMSCRIPTEN__
+public:
+    static GLuint glScreenTextures[SCREEN_COUNT];
+    static GLuint glImageTexture;
+    static GLuint glYTextureID;
+    static GLuint glUTextureID;
+    static GLuint glVTextureID;
+    static float glVideoU;
+    static float glVideoV;
+    static GLuint glVBO;
+    static int32 lastGLShaderID;
+    static float glTextureW;
+    static float glTextureH;
+#endif
 };
