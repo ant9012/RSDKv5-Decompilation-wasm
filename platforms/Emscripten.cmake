@@ -17,7 +17,6 @@ add_library(libtheora STATIC
     ${THEORA_DIR}/lib/analyze.c
     ${THEORA_DIR}/lib/apiwrapper.c
     ${THEORA_DIR}/lib/bitpack.c
-    ${THEORA_DIR}/lib/cpu.c
     ${THEORA_DIR}/lib/decapiwrapper.c
     ${THEORA_DIR}/lib/decinfo.c
     ${THEORA_DIR}/lib/decode.c
