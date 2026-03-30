@@ -3,7 +3,7 @@ name: Build RSDKv5
 on:
   push:
     branches:
-      - master
+      - web
 
 env:
   GENERAL_FLAGS: "-DRETRO_DISABLE_PLUS=ON -DCMAKE_BUILD_TYPE=Release"
@@ -191,9 +191,9 @@ jobs:
           
       - name: Build RSDKv5 + U Emscripten
         run: |
-          emcmake cmake -B build_v5 -DCMAKE_C_FLAGS="-s USE_OGG=1" ${{env.GENERAL_FLAGS}} ${{env.V5_FLAGS}}
+          emcmake cmake -B build_v5 -DCMAKE_C_FLAGS="-s USE_OGG=1" ${{env.V5_FLAGS}}
           cmake --build build_v5 --config release --parallel
-          emcmake cmake -B build_v5U -DCMAKE_C_FLAGS="-s USE_OGG=1" ${{env.GENERAL_FLAGS}} ${{env.V5U_FLAGS}}
+          emcmake cmake -B build_v5U -DCMAKE_C_FLAGS="-s USE_OGG=1" ${{env.V5U_FLAGS}}
           cmake --build build_v5U --config release --parallel
           
       - name: Move artifacts
