@@ -14,6 +14,16 @@ We do not condone using this project as a means for piracy in any form. This pro
 * Added various other backends to windows aside from the usual DirectX 9 backends
 
 
+# IF YOU'RE HERE FOR SONIC MANIA
+
+You have the option of building Sonic Mania and this fork in this repo: https://github.com/ant9012/Sonic-Mania-Decompilation-wasm/
+
+**MAKE SURE TO FOLLOW THE INSTRUCTIONS FOR HOSTING THIS BELOW**
+
+[Custom Interface instructions](#Getting-this-to-work-on-custom-interfaces)
+
+[Shaders instructions](#Getting-Shaders-to-work-on-web)
+
 
 # How to Build
 
@@ -103,6 +113,7 @@ You can also extract your Data.rsdk from [RetroED](https://github.com/RSDKModdin
 
 ### How to do such a feat
 Extract your Data.rsdk using [RetroED](https://github.com/RSDKModding/RetroED) and just plop the RSDKv5/Shaders folder in there.
+
 
 # Contact:
 Join the [Retro Engine Modding Discord Server](https://dc.railgun.works/retroengine) for any extra questions you may need to know about the decompilation or modding it.
