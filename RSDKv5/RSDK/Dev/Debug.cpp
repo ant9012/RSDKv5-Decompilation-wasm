@@ -24,17 +24,18 @@ inline void PrintConsole(const char *message) { printf("%s", message); }
 
 void RSDK::PrintLog(int32 mode, const char *message, ...)
 {
-#ifndef RETRO_DISABLE_LOG
+#if !RETRO_DISABLE_LOG
     if (engineDebugMode) {
         // make the full string
+        char tmpStr[0x400];
         va_list args;
         va_start(args, message);
 
-        vsnprintf(outputString, sizeof(outputString), message, args);
+        vsnprintf(tmpStr, sizeof(tmpStr), message, args);
         if (useEndLine)
-            sprintf(outputString, "%.*s\n", (int32)sizeof(outputString) - 1, outputString);
+            sprintf(outputString, "%.*s\n", (int32)sizeof(tmpStr) - 1, tmpStr);
         else
-            sprintf(outputString, "%.*s", (int32)sizeof(outputString) - 1, outputString);
+            sprintf(outputString, "%.*s", (int32)sizeof(tmpStr) - 1, tmpStr);
         va_end(args);
 
 #if RETRO_REV02
