@@ -7,9 +7,6 @@ add_executable(RetroEngine ${RETRO_FILES})
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -O3")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O3")
 
-# we're gonna handle libtheora here, because usually, COMPILE_THEORA directs
-# to the android dependencies, can't just set THEORA_DIR - because CMakeLists.txt
-# immediately changes it
 set(COMPILE_THEORA FALSE)
 set(THEORA_DIR dependencies/all/libtheora)
 
@@ -69,6 +66,10 @@ set(emsc_link_options
     -sMAIN_MODULE=1
     -sUSE_PTHREADS=1
     -sPTHREAD_POOL_SIZE=4
+    -sASYNCIFY
+    -sASYNCIFY_STACK_SIZE=65536
+    "-sEXPORTED_RUNTIME_METHODS=['FS','ccall','cwrap']"
+    "-sEXPORTED_FUNCTIONS=['_main','_RSDK_Initialize','_RSDK_Configure']"
     -DRSDK_REVISION=3
     -lm
     -lidbfs.js
@@ -81,6 +82,9 @@ set(emsc_link_options
 
 target_compile_options(RetroEngine PRIVATE ${EMSCRIPTEN_FLAGS})
 target_link_options(RetroEngine PRIVATE ${emsc_link_options})
+
+
+set(RETRO_MOD_LOADER TRUE)
 
 if(RETRO_MOD_LOADER)
     set_target_properties(RetroEngine PROPERTIES
