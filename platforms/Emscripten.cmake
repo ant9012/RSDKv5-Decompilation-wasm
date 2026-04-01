@@ -66,8 +66,6 @@ set(emsc_link_options
     -sMAIN_MODULE=1
     -sUSE_PTHREADS=1
     -sPTHREAD_POOL_SIZE=4
-    -sASYNCIFY
-    -sASYNCIFY_STACK_SIZE=65536
     "-sEXPORTED_RUNTIME_METHODS=['FS','ccall','cwrap']"
     "-sEXPORTED_FUNCTIONS=['_main','_RSDK_Initialize','_RSDK_Configure']"
     -DRSDK_REVISION=3
