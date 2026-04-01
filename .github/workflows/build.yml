@@ -3,7 +3,7 @@ name: Build RSDKv5
 on:
   push:
     branches:
-      - web
+      - stable-web
 
 env:
   GENERAL_FLAGS: "-DRETRO_DISABLE_PLUS=ON -DCMAKE_BUILD_TYPE=Release"
