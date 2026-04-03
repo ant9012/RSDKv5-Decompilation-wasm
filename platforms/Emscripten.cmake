@@ -58,20 +58,23 @@ set(EMSCRIPTEN_FLAGS
 )
 
 set(emsc_link_options
-    -sTOTAL_MEMORY=128MB
+    -sINITIAL_MEMORY=268435456
     -sALLOW_MEMORY_GROWTH=1
+    -sASSERTIONS=2                  # Detailed error messages
+    -sSTACK_OVERFLOW_CHECK=2        # Catch stack issues
+    -sSAFE_HEAP=1                   # Catch heap corruption
     -sUSE_SDL=2
     -sUSE_OGG=1
     -sFORCE_FILESYSTEM=1
     -sMAIN_MODULE=1
     -sUSE_PTHREADS=1
     -sPTHREAD_POOL_SIZE=4
+    -sPROXY_TO_PTHREAD=1
     "-sEXPORTED_RUNTIME_METHODS=['FS','ccall','cwrap']"
     "-sEXPORTED_FUNCTIONS=['_main','_RSDK_Initialize','_RSDK_Configure']"
     -DRSDK_REVISION=3
     -lm
     -lidbfs.js
-    -flto
     -pthread
     -Wl,--whole-archive
     ${THEORA_LIB}
