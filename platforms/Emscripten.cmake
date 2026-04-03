@@ -7,9 +7,6 @@ add_executable(RetroEngine ${RETRO_FILES})
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -O3")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O3")
 
-# we're gonna handle libtheora here, because usually, COMPILE_THEORA directs
-# to the android dependencies, can't just set THEORA_DIR - because CMakeLists.txt
-# immediately changes it
 set(COMPILE_THEORA FALSE)
 set(THEORA_DIR dependencies/all/libtheora)
 
@@ -53,6 +50,7 @@ set(EMSCRIPTEN_FLAGS
     -sUSE_SDL=2
     -sUSE_OGG=1
     -sUSE_PTHREADS=1
+    -pthread
     -DRSDK_REVISION=3
     -DRSDK_USE_SDL2=1
     -DRETRO_STANDALONE=1
@@ -61,18 +59,18 @@ set(EMSCRIPTEN_FLAGS
 )
 
 set(emsc_link_options
-    # Memory settings
-    -sINITIAL_MEMORY=268435456          # 256MB
-    -sMAXIMUM_MEMORY=2147483648         # 2GB max
+    # Memory - Critical settings
+    -sINITIAL_MEMORY=536870912          # 512MB (increased from 256)
+    -sMAXIMUM_MEMORY=2147483648         # 2GB
     -sALLOW_MEMORY_GROWTH=1
-    -sSTACK_SIZE=5242880                # 5MB stack
+    -sSTACK_SIZE=8388608                # 8MB stack (increased)
     
-    # Threading - CRITICAL FIXES
+    # Threading - Proper configuration for web workers
     -sUSE_PTHREADS=1
-    -sPTHREAD_POOL_SIZE=8               # Increased from 4 to 8
-    -sPTHREAD_POOL_SIZE_STRICT=0        # Allow pool to grow if needed
-    -sPROXY_TO_PTHREAD=0                # DISABLE - causes proxy_async issues
-    -sOFFSCREENCANVAS_SUPPORT=0         # May conflict with threading
+    -sPTHREAD_POOL_SIZE=navigator.hardwareConcurrency
+    -sPTHREAD_POOL_SIZE_STRICT=0
+    -sPROXY_TO_PTHREAD=0                # Don't proxy main to pthread
+    -sOFFSCREEN_FRAMEBUFFER=1           # Better canvas handling
     
     # Libraries
     -sUSE_SDL=2
@@ -83,12 +81,23 @@ set(emsc_link_options
     -lidbfs.js
     
     # Module settings
-    -sMAIN_MODULE=1
-    -sEXIT_RUNTIME=0                    # Don't exit runtime
+    -sMAIN_MODULE=2                     # Level 2 for better compatibility
+    -sEXIT_RUNTIME=0
+    -sENVIRONMENT=web,worker
+    -sMODULARIZE=0                      # Don't modularize
+    
+    # Error handling
+    -sASSERTIONS=1                      # Enable assertions for debugging
+    -sSTACK_OVERFLOW_CHECK=2
+    -sNO_DISABLE_EXCEPTION_CATCHING
     
     # Exports
-    "-sEXPORTED_RUNTIME_METHODS=['FS','ccall','cwrap']"
-    "-sEXPORTED_FUNCTIONS=['_main','_RSDK_Initialize','_RSDK_Configure']"
+    "-sEXPORTED_RUNTIME_METHODS=['FS','ccall','cwrap','addFunction','removeFunction']"
+    "-sEXPORTED_FUNCTIONS=['_main','_RSDK_Initialize','_RSDK_Configure','_malloc','_free']"
+    
+    # Async
+    -sASYNCIFY=1
+    -sASYNCIFY_STACK_SIZE=65536
     
     # Other
     -DRSDK_REVISION=3
