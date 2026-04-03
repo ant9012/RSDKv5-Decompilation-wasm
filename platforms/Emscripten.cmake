@@ -61,16 +61,18 @@ set(EMSCRIPTEN_FLAGS
 )
 
 set(emsc_link_options
-    # Memory settings - fixed for pthread compatibility
-    -sINITIAL_MEMORY=268435456          # 256MB (TOTAL_MEMORY is deprecated)
+    # Memory settings
+    -sINITIAL_MEMORY=268435456          # 256MB
     -sMAXIMUM_MEMORY=2147483648         # 2GB max
     -sALLOW_MEMORY_GROWTH=1
     -sSTACK_SIZE=5242880                # 5MB stack
     
-    # Threading
+    # Threading - CRITICAL FIXES
     -sUSE_PTHREADS=1
-    -sPTHREAD_POOL_SIZE=4
-    -sPROXY_TO_PTHREAD=1                # Critical for memory growth with threads
+    -sPTHREAD_POOL_SIZE=8               # Increased from 4 to 8
+    -sPTHREAD_POOL_SIZE_STRICT=0        # Allow pool to grow if needed
+    -sPROXY_TO_PTHREAD=0                # DISABLE - causes proxy_async issues
+    -sOFFSCREENCANVAS_SUPPORT=0         # May conflict with threading
     
     # Libraries
     -sUSE_SDL=2
@@ -82,7 +84,7 @@ set(emsc_link_options
     
     # Module settings
     -sMAIN_MODULE=1
-    -sEXPORT_ALL=1
+    -sEXIT_RUNTIME=0                    # Don't exit runtime
     
     # Exports
     "-sEXPORTED_RUNTIME_METHODS=['FS','ccall','cwrap']"
