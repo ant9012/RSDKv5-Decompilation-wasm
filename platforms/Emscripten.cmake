@@ -7,6 +7,9 @@ add_executable(RetroEngine ${RETRO_FILES})
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -O3")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O3")
 
+# we're gonna handle libtheora here, because usually, COMPILE_THEORA directs
+# to the android dependencies, can't just set THEORA_DIR - because CMakeLists.txt
+# immediately changes it
 set(COMPILE_THEORA FALSE)
 set(THEORA_DIR dependencies/all/libtheora)
 
@@ -14,6 +17,7 @@ add_library(libtheora STATIC
     ${THEORA_DIR}/lib/analyze.c
     ${THEORA_DIR}/lib/apiwrapper.c
     ${THEORA_DIR}/lib/bitpack.c
+    ${THEORA_DIR}/lib/cpu.c
     ${THEORA_DIR}/lib/decapiwrapper.c
     ${THEORA_DIR}/lib/decinfo.c
     ${THEORA_DIR}/lib/decode.c
@@ -39,10 +43,9 @@ add_library(libtheora STATIC
     ${THEORA_DIR}/lib/tokenize.c
 )
 
-target_compile_options(libtheora PRIVATE ${THEORA_FLAGS} -sUSE_OGG=1)
-target_link_libraries(libtheora PRIVATE "-sUSE_OGG=1")
+target_compile_options(libtheora PRIVATE ${THEORA_FLAGS})
 
-target_include_directories(libtheora PRIVATE ${THEORA_DIR}/include)
+target_include_directories(libtheora PRIVATE ${THEORA_DIR}/include ${OGG_DIR}/include)
 target_include_directories(RetroEngine PRIVATE ${THEORA_DIR}/include)
 target_link_libraries(RetroEngine libtheora)
 
@@ -58,23 +61,18 @@ set(EMSCRIPTEN_FLAGS
 )
 
 set(emsc_link_options
-    -sINITIAL_MEMORY=268435456
+    -sTOTAL_MEMORY=128MB
     -sALLOW_MEMORY_GROWTH=1
-    -sASSERTIONS=2                  # Detailed error messages
-    -sSTACK_OVERFLOW_CHECK=2        # Catch stack issues
-    -sSAFE_HEAP=1                   # Catch heap corruption
     -sUSE_SDL=2
     -sUSE_OGG=1
     -sFORCE_FILESYSTEM=1
     -sMAIN_MODULE=1
     -sUSE_PTHREADS=1
     -sPTHREAD_POOL_SIZE=4
-    -sPROXY_TO_PTHREAD=1
-    "-sEXPORTED_RUNTIME_METHODS=['FS','ccall','cwrap']"
-    "-sEXPORTED_FUNCTIONS=['_main','_RSDK_Initialize','_RSDK_Configure']"
     -DRSDK_REVISION=3
     -lm
     -lidbfs.js
+    -flto
     -pthread
     -Wl,--whole-archive
     ${THEORA_LIB}
@@ -83,9 +81,6 @@ set(emsc_link_options
 
 target_compile_options(RetroEngine PRIVATE ${EMSCRIPTEN_FLAGS})
 target_link_options(RetroEngine PRIVATE ${emsc_link_options})
-
-
-set(RETRO_MOD_LOADER TRUE)
 
 if(RETRO_MOD_LOADER)
     set_target_properties(RetroEngine PROPERTIES
