@@ -45,7 +45,7 @@ add_library(libtheora STATIC
 
 target_compile_options(libtheora PRIVATE ${THEORA_FLAGS} -sUSE_OGG=1)
 
-target_include_directories(libtheora PRIVATE ${THEORA_DIR}/include -sUSE_OGG=1)
+target_include_directories(libtheora PRIVATE ${THEORA_DIR}/include)
 target_include_directories(RetroEngine PRIVATE ${THEORA_DIR}/include)
 target_link_libraries(RetroEngine libtheora)
 
@@ -61,18 +61,36 @@ set(EMSCRIPTEN_FLAGS
 )
 
 set(emsc_link_options
-    -sTOTAL_MEMORY=128MB
+    # Memory settings - fixed for pthread compatibility
+    -sINITIAL_MEMORY=268435456          # 256MB (TOTAL_MEMORY is deprecated)
+    -sMAXIMUM_MEMORY=2147483648         # 2GB max
     -sALLOW_MEMORY_GROWTH=1
-    -sUSE_SDL=2
-    -sUSE_OGG=1
-    -sFORCE_FILESYSTEM=1
-    -sMAIN_MODULE=1
+    -sSTACK_SIZE=5242880                # 5MB stack
+    
+    # Threading
     -sUSE_PTHREADS=1
     -sPTHREAD_POOL_SIZE=4
+    -sPROXY_TO_PTHREAD=1                # Critical for memory growth with threads
+    
+    # Libraries
+    -sUSE_SDL=2
+    -sUSE_OGG=1
+    
+    # Filesystem
+    -sFORCE_FILESYSTEM=1
+    -lidbfs.js
+    
+    # Module settings
+    -sMAIN_MODULE=1
+    -sEXPORT_ALL=1
+    
+    # Exports
+    "-sEXPORTED_RUNTIME_METHODS=['FS','ccall','cwrap']"
+    "-sEXPORTED_FUNCTIONS=['_main','_RSDK_Initialize','_RSDK_Configure']"
+    
+    # Other
     -DRSDK_REVISION=3
     -lm
-    -lidbfs.js
-    -flto
     -pthread
     -Wl,--whole-archive
     ${THEORA_LIB}
