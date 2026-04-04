@@ -19,25 +19,25 @@ add_library(libtheora STATIC
     ${THEORA_DIR}/lib/decinfo.c
     ${THEORA_DIR}/lib/decode.c
     ${THEORA_DIR}/lib/dequant.c
-    ${THEORA_DIR}/lib/encapiwrapper.c
-    ${THEORA_DIR}/lib/encfrag.c
-    ${THEORA_DIR}/lib/encinfo.c
-    ${THEORA_DIR}/lib/encode.c
+    # REMOVED: ${THEORA_DIR}/lib/encapiwrapper.c
+    # REMOVED: ${THEORA_DIR}/lib/encfrag.c
+    # REMOVED: ${THEORA_DIR}/lib/encinfo.c
+    # REMOVED: ${THEORA_DIR}/lib/encode.c
     ${THEORA_DIR}/lib/encoder_disabled.c
-    ${THEORA_DIR}/lib/enquant.c
-    ${THEORA_DIR}/lib/fdct.c
+    # REMOVED: ${THEORA_DIR}/lib/enquant.c
+    # REMOVED: ${THEORA_DIR}/lib/fdct.c
     ${THEORA_DIR}/lib/fragment.c
     ${THEORA_DIR}/lib/huffdec.c
-    ${THEORA_DIR}/lib/huffenc.c
+    # REMOVED: ${THEORA_DIR}/lib/huffenc.c
     ${THEORA_DIR}/lib/idct.c
     ${THEORA_DIR}/lib/info.c
     ${THEORA_DIR}/lib/internal.c
     ${THEORA_DIR}/lib/mathops.c
-    ${THEORA_DIR}/lib/mcenc.c
+    # REMOVED: ${THEORA_DIR}/lib/mcenc.c
     ${THEORA_DIR}/lib/quant.c
-    ${THEORA_DIR}/lib/rate.c
+    # REMOVED: ${THEORA_DIR}/lib/rate.c
     ${THEORA_DIR}/lib/state.c
-    ${THEORA_DIR}/lib/tokenize.c
+    # REMOVED: ${THEORA_DIR}/lib/tokenize.c
 )
 
 target_compile_options(libtheora PRIVATE -sUSE_OGG=1)
