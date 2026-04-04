@@ -81,7 +81,8 @@ set(emsc_link_options
     -lidbfs.js
     
     # Module settings
-    -sMAIN_MODULE=2                     # Level 2 for better compatibility
+    -sMAIN_MODULE=1
+    -sALLOW_TABLE_GROWTH=1 
     -sEXIT_RUNTIME=0
     -sENVIRONMENT=web,worker
     -sMODULARIZE=0                      # Don't modularize
