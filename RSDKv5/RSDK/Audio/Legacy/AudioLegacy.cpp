@@ -30,9 +30,10 @@ void RSDK::Legacy::SetMusicTrack(const char *filePath, uint8 trackID, bool32 loo
 static float GetAudioSpeedFix(const char* filepath) {
     RSDK::FileInfo info;
     float speed = 1.0f; 
+    char fullPath[256];
+    snprintf(fullPath, sizeof(fullPath), "Data/Music/%s", filepath);
     
-    if (RSDK::LoadFile(&info, filepath, RSDK::FMODE_RB)) {
-        // Increased buffer to 1024 to bypass custom metadata and ID3 tags
+    if (RSDK::LoadFile(&info, fullPath, RSDK::FMODE_RB)) {
         uint8 buffer[1024] = {0}; 
         RSDK::ReadBytes(&info, buffer, sizeof(buffer));
         RSDK::CloseFile(&info);
