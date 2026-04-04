@@ -29,48 +29,43 @@ void RSDK::Legacy::SetMusicTrack(const char *filePath, uint8 trackID, bool32 loo
 
 static float GetAudioSpeedFix(const char* filepath) {
     RSDK::FileInfo info;
-    float speed = 1.0f; // Strictly default to 1.0x (normal speed)
+    float speed = 1.0f; 
     
     if (RSDK::LoadFile(&info, filepath, RSDK::FMODE_RB)) {
-        
-        // CRITICAL FIX 1: Initialize the buffer to all zeros!
-        // This prevents reading leftover ghost memory from the previous song.
-        uint8 buffer[128] = {0}; 
+        // Increased buffer to 1024 to bypass custom metadata and ID3 tags
+        uint8 buffer[1024] = {0}; 
         RSDK::ReadBytes(&info, buffer, sizeof(buffer));
         RSDK::CloseFile(&info);
         
-        // --- OGG VORBIS CHECK ---
-        if (buffer[0] == 'O' && buffer[1] == 'g' && buffer[2] == 'g' && buffer[3] == 'S') {
-            for (int i = 0; i < sizeof(buffer) - 15; i++) {
-                
-                // CRITICAL FIX 2: Check for 0x01 before 'v' to guarantee we 
-                // are reading the true ID header, not a comment tag or random data.
-                if (buffer[i] == 0x01 && buffer[i+1] == 'v' && buffer[i+2] == 'o' && 
-                    buffer[i+3] == 'r' && buffer[i+4] == 'b' && buffer[i+5] == 'i' && buffer[i+6] == 's') {
-                    
-                    // CRITICAL FIX 3: Cast to uint32 to prevent integer overflow
-                    uint32 sampleRate = (uint32)buffer[i+12] | ((uint32)buffer[i+13] << 8) | 
-                                        ((uint32)buffer[i+14] << 16) | ((uint32)buffer[i+15] << 24);
-                    
-                    // STRICT WHITELIST: Only change speed if it is exactly 48000Hz.
-                    if (sampleRate == 48000) {
-                        speed = 48000.0f / 44100.0f;
-                    }
-                    break; // Stop searching once we find the header
-                }
-            }
-        }
-        // --- WAV CHECK ---
-        else if (buffer[0] == 'R' && buffer[1] == 'I' && buffer[2] == 'F' && buffer[3] == 'F') {
-            uint32 sampleRate = (uint32)buffer[24] | ((uint32)buffer[25] << 8) | 
-                                ((uint32)buffer[26] << 16) | ((uint32)buffer[27] << 24);
+        // Scan the entire buffer to find the true audio headers
+        for (int i = 0; i < sizeof(buffer) - 16; i++) {
             
-            if (sampleRate == 48000) {
-                speed = 48000.0f / 44100.0f;
+            // --- OGG VORBIS SCANNER ---
+            if (buffer[i] == 0x01 && buffer[i+1] == 'v' && buffer[i+2] == 'o' && 
+                buffer[i+3] == 'r' && buffer[i+4] == 'b' && buffer[i+5] == 'i' && buffer[i+6] == 's') {
+                
+                uint32 sampleRate = (uint32)buffer[i+12] | ((uint32)buffer[i+13] << 8) | 
+                                    ((uint32)buffer[i+14] << 16) | ((uint32)buffer[i+15] << 24);
+                
+                // Dynamically fix ANY valid sample rate
+                if (sampleRate >= 11025 && sampleRate <= 96000) {
+                    speed = (float)sampleRate / 44100.0f;
+                }
+                break; 
+            }
+            
+            // --- WAV FORMAT SCANNER ---
+            if (buffer[i] == 'f' && buffer[i+1] == 'm' && buffer[i+2] == 't' && buffer[i+3] == ' ') {
+                uint32 sampleRate = (uint32)buffer[i+12] | ((uint32)buffer[i+13] << 8) | 
+                                    ((uint32)buffer[i+14] << 16) | ((uint32)buffer[i+15] << 24);
+                
+                if (sampleRate >= 11025 && sampleRate <= 96000) {
+                    speed = (float)sampleRate / 44100.0f;
+                }
+                break;
             }
         }
     }
-    
     return speed;
 }
 
@@ -171,8 +166,9 @@ void RSDK::Legacy::v4::SetSfxAttributes(int32 sfxID, int32 loop, int8 pan)
     for (int32 c = 0; c < CHANNEL_COUNT; ++c) {
         if (channels[c].soundID == sfxID && channels[c].state == CHANNEL_SFX) {
             
-            // FIX: Replaced 'pan / 100.0f' with '0.0f' to prevent the WebAudio extreme-pan mute bug
-            RSDK::SetChannelAttributes(c, 1.0, 0.0f, 1.0);
+            // WEBAUDIO FIX: Completely removed RSDK::SetChannelAttributes from here!
+            // Updating attributes on stereo SFX causes the WASM audio nodes to crash and mute.
+            // Leaving this blank lets the sound safely play at normal volume and center pan.
             
             if (loop != -1)
                 channels[c].loop = loop ? 0 : -1;
