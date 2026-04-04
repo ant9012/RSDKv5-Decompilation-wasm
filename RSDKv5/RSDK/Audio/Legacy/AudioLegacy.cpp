@@ -45,7 +45,7 @@ int32 RSDK::Legacy::PlayMusic(int32 trackID)
             loopPoint = 1;
 
         musicCurrentTrack = trackID;
-        musicChannel      = PlayStream(track->fileName, musicChannel, startPos, loopPoint, true);
+        musicChannel      = PlayStream(track->fileName, musicChannel, startPos, loopPoint, false);
         musicVolume       = 100;
 
         // --- AUDIO SPEED PATCH START ---
