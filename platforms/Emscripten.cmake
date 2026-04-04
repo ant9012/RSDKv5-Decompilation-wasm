@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 project(RetroEngine)
 
+set(ENV{EMCC_FORCE_STDLIBS} 1)
+
 add_executable(RetroEngine ${RETRO_FILES})
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -O3")
