@@ -32,7 +32,7 @@ static float GetAudioSpeedFix(const char* filepath) {
     float speed = 1.0f;
     
     // Open the file through the mod loader's virtual file system
-    if (RSDK::LoadFile(&info, filepath, RSDK::FMODE_READ)) {
+    if (RSDK::LoadFile(&info, filepath, RSDK::FMODE_RB)) {
         uint8 buffer[128]; // 128 bytes is enough to grab the header
         RSDK::ReadBytes(&info, buffer, sizeof(buffer));
         RSDK::CloseFile(&info);
@@ -105,7 +105,7 @@ void RSDK::Legacy::SetMusicVolume(int32 volume)
 {
     musicVolume = CLAMP(volume, 0, 100);
     // Change the update loop to use our dynamic global variable
-    SetChannelAttributes(musicChannel, musicVolume / 100.0f, pan, currentMusicSpeedFix);
+    SetChannelAttributes(musicChannel, musicVolume / 100.0f, 0.0f, currentMusicSpeedFix);
 }
 
 void RSDK::Legacy::v4::SwapMusicTrack(const char *filePath, uint8 trackID, uint32 loopPoint, uint32 ratio)
