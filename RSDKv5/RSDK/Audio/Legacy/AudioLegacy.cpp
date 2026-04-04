@@ -29,37 +29,44 @@ void RSDK::Legacy::SetMusicTrack(const char *filePath, uint8 trackID, bool32 loo
 
 static float GetAudioSpeedFix(const char* filepath) {
     RSDK::FileInfo info;
-    float speed = 1.0f;
+    float speed = 1.0f; // Strictly default to 1.0x (normal speed)
     
-    // Open the file through the mod loader's virtual file system
     if (RSDK::LoadFile(&info, filepath, RSDK::FMODE_RB)) {
-        uint8 buffer[128]; // 128 bytes is enough to grab the header
+        
+        // CRITICAL FIX 1: Initialize the buffer to all zeros!
+        // This prevents reading leftover ghost memory from the previous song.
+        uint8 buffer[128] = {0}; 
         RSDK::ReadBytes(&info, buffer, sizeof(buffer));
         RSDK::CloseFile(&info);
         
-        // --- Check for OGG Vorbis ---
+        // --- OGG VORBIS CHECK ---
         if (buffer[0] == 'O' && buffer[1] == 'g' && buffer[2] == 'g' && buffer[3] == 'S') {
             for (int i = 0; i < sizeof(buffer) - 15; i++) {
-                // Search for the "vorbis" identifier string
-                if (buffer[i] == 'v' && buffer[i+1] == 'o' && buffer[i+2] == 'r' && 
-                    buffer[i+3] == 'b' && buffer[i+4] == 'i' && buffer[i+5] == 's') {
+                
+                // CRITICAL FIX 2: Check for 0x01 before 'v' to guarantee we 
+                // are reading the true ID header, not a comment tag or random data.
+                if (buffer[i] == 0x01 && buffer[i+1] == 'v' && buffer[i+2] == 'o' && 
+                    buffer[i+3] == 'r' && buffer[i+4] == 'b' && buffer[i+5] == 'i' && buffer[i+6] == 's') {
                     
-                    // The sample rate is stored 11 bytes after the 'v'
-                    uint32 sampleRate = buffer[i+11] | (buffer[i+12] << 8) | 
-                                       (buffer[i+13] << 16) | (buffer[i+14] << 24);
+                    // CRITICAL FIX 3: Cast to uint32 to prevent integer overflow
+                    uint32 sampleRate = (uint32)buffer[i+12] | ((uint32)buffer[i+13] << 8) | 
+                                        ((uint32)buffer[i+14] << 16) | ((uint32)buffer[i+15] << 24);
                     
-                    if (sampleRate > 0) {
-                        speed = (float)sampleRate / 44100.0f;
+                    // STRICT WHITELIST: Only change speed if it is exactly 48000Hz.
+                    if (sampleRate == 48000) {
+                        speed = 48000.0f / 44100.0f;
                     }
-                    break;
+                    break; // Stop searching once we find the header
                 }
             }
         }
-        // --- Check for WAV (just in case) ---
+        // --- WAV CHECK ---
         else if (buffer[0] == 'R' && buffer[1] == 'I' && buffer[2] == 'F' && buffer[3] == 'F') {
-            uint32 sampleRate = buffer[24] | (buffer[25] << 8) | (buffer[26] << 16) | (buffer[27] << 24);
-            if (sampleRate > 0) {
-                speed = (float)sampleRate / 44100.0f;
+            uint32 sampleRate = (uint32)buffer[24] | ((uint32)buffer[25] << 8) | 
+                                ((uint32)buffer[26] << 16) | ((uint32)buffer[27] << 24);
+            
+            if (sampleRate == 48000) {
+                speed = 48000.0f / 44100.0f;
             }
         }
     }
