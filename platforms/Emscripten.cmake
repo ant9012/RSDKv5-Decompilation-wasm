@@ -40,11 +40,10 @@ add_library(libtheora STATIC
     ${THEORA_DIR}/lib/tokenize.c
 )
 
-target_compile_options(libtheora PRIVATE ${THEORA_FLAGS} -sUSE_OGG=1)
+target_compile_options(libtheora PRIVATE -sUSE_OGG=1)
 
 target_include_directories(libtheora PRIVATE ${THEORA_DIR}/include)
 target_include_directories(RetroEngine PRIVATE ${THEORA_DIR}/include)
-target_link_libraries(RetroEngine libtheora)
 
 set(EMSCRIPTEN_FLAGS
     -sUSE_SDL=2
@@ -81,8 +80,8 @@ set(emsc_link_options
     -lidbfs.js
 
     # Module settings
-    -sMAIN_MODULE=1                     # ← was 2; needs 1 for full stdlib (vsprintf etc.)
-    -sALLOW_TABLE_GROWTH=1              # ← NEW: lets Game.wasm register its function pointers at runtime
+    -sMAIN_MODULE=1
+    -sALLOW_TABLE_GROWTH=1
     -sEXIT_RUNTIME=0
     -sENVIRONMENT=web,worker
     -sMODULARIZE=0
@@ -104,13 +103,10 @@ set(emsc_link_options
     -DRSDK_REVISION=3
     -lm
     -pthread
-    -Wl,--whole-archive
-    ${THEORA_LIB}
-    -Wl,--no-whole-archive
 )
 
-
 target_compile_options(RetroEngine PRIVATE ${EMSCRIPTEN_FLAGS})
+target_link_libraries(RetroEngine libtheora)
 target_link_options(RetroEngine PRIVATE ${emsc_link_options})
 
 if(RETRO_MOD_LOADER)
