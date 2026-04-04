@@ -47,6 +47,17 @@ int32 RSDK::Legacy::PlayMusic(int32 trackID)
         musicCurrentTrack = trackID;
         musicChannel      = PlayStream(track->fileName, musicChannel, startPos, loopPoint, true);
         musicVolume       = 100;
+
+        // --- AUDIO SPEED PATCH START ---
+        // Calculate the ratio between the mod's 48000Hz files and the engine's 44100Hz mixer.
+        // This equals ~1.0884f, which speeds the audio back up to its proper pitch/tempo.
+        float sampleRateFix = 48000.0f / 44100.0f;
+        
+        // Apply the speed correction immediately to the active music channel.
+        // SetChannelAttributes arguments: (channelID, volume, pan, speed)
+        // Note: We use 1.0f for volume here because v5 uses a 0.0 to 1.0 scale internally.
+        SetChannelAttributes(musicChannel, 1.0f, 0.0f, sampleRateFix);
+        // --- AUDIO SPEED PATCH END ---
     }
 
     return musicChannel;
