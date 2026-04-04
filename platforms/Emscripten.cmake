@@ -59,47 +59,46 @@ set(EMSCRIPTEN_FLAGS
 )
 
 set(emsc_link_options
-    # Memory
-    -sINITIAL_MEMORY=536870912
-    -sMAXIMUM_MEMORY=2147483648
+    # Memory - Critical settings
+    -sINITIAL_MEMORY=536870912          # 512MB (increased from 256)
+    -sMAXIMUM_MEMORY=2147483648         # 2GB
     -sALLOW_MEMORY_GROWTH=1
-    -sSTACK_SIZE=8388608
-
-    # Threading
+    -sSTACK_SIZE=8388608                # 8MB stack (increased)
+    
+    # Threading - Proper configuration for web workers
     -sUSE_PTHREADS=1
     -sPTHREAD_POOL_SIZE=navigator.hardwareConcurrency
     -sPTHREAD_POOL_SIZE_STRICT=0
-    -sPROXY_TO_PTHREAD=0
-    -sOFFSCREEN_FRAMEBUFFER=1
-
+    -sPROXY_TO_PTHREAD=0                # Don't proxy main to pthread
+    -sOFFSCREEN_FRAMEBUFFER=1           # Better canvas handling
+    
     # Libraries
     -sUSE_SDL=2
     -sUSE_OGG=1
-
+    
     # Filesystem
     -sFORCE_FILESYSTEM=1
     -lidbfs.js
-
+    
     # Module settings
-    -sMAIN_MODULE=1                     # ← was 2; needs 1 for full stdlib (vsprintf etc.)
-    -sALLOW_TABLE_GROWTH=1              # ← NEW: lets Game.wasm register its function pointers at runtime
+    -sMAIN_MODULE=2                     # Level 2 for better compatibility
     -sEXIT_RUNTIME=0
     -sENVIRONMENT=web,worker
-    -sMODULARIZE=0
-
+    -sMODULARIZE=0                      # Don't modularize
+    
     # Error handling
-    -sASSERTIONS=1
+    -sASSERTIONS=1                      # Enable assertions for debugging
     -sSTACK_OVERFLOW_CHECK=2
     -sNO_DISABLE_EXCEPTION_CATCHING
-
+    
     # Exports
     "-sEXPORTED_RUNTIME_METHODS=['FS','ccall','cwrap','addFunction','removeFunction']"
     "-sEXPORTED_FUNCTIONS=['_main','_RSDK_Initialize','_RSDK_Configure','_malloc','_free']"
-
+    
     # Async
     -sASYNCIFY=1
     -sASYNCIFY_STACK_SIZE=65536
-
+    
     # Other
     -DRSDK_REVISION=3
     -lm
@@ -108,7 +107,6 @@ set(emsc_link_options
     ${THEORA_LIB}
     -Wl,--no-whole-archive
 )
-
 
 target_compile_options(RetroEngine PRIVATE ${EMSCRIPTEN_FLAGS})
 target_link_options(RetroEngine PRIVATE ${emsc_link_options})
