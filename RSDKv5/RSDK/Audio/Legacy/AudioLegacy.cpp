@@ -1,5 +1,4 @@
 
-static float currentMusicSpeedFix = 1.0f;
 
 int32 RSDK::Legacy::globalSFXCount = 0;
 int32 RSDK::Legacy::stageSFXCount  = 0;
@@ -27,49 +26,6 @@ void RSDK::Legacy::SetMusicTrack(const char *filePath, uint8 trackID, bool32 loo
     track->loopPoint = loopPoint;
 }
 
-static float GetAudioSpeedFix(const char* filepath) {
-    RSDK::FileInfo info;
-    float speed = 1.0f; 
-    char fullPath[256];
-    snprintf(fullPath, sizeof(fullPath), "Data/Music/%s", filepath);
-    
-    if (RSDK::LoadFile(&info, fullPath, RSDK::FMODE_RB)) {
-        uint8 buffer[1024] = {0}; 
-        RSDK::ReadBytes(&info, buffer, sizeof(buffer));
-        RSDK::CloseFile(&info);
-        
-        // Scan the entire buffer to find the true audio headers
-        for (int i = 0; i < sizeof(buffer) - 16; i++) {
-            
-            // --- OGG VORBIS SCANNER ---
-            if (buffer[i] == 0x01 && buffer[i+1] == 'v' && buffer[i+2] == 'o' && 
-                buffer[i+3] == 'r' && buffer[i+4] == 'b' && buffer[i+5] == 'i' && buffer[i+6] == 's') {
-                
-                uint32 sampleRate = (uint32)buffer[i+12] | ((uint32)buffer[i+13] << 8) | 
-                                    ((uint32)buffer[i+14] << 16) | ((uint32)buffer[i+15] << 24);
-                
-                // Dynamically fix ANY valid sample rate
-                if (sampleRate >= 11025 && sampleRate <= 96000) {
-                    speed = (float)sampleRate / 44100.0f;
-                }
-                break; 
-            }
-            
-            // --- WAV FORMAT SCANNER ---
-            if (buffer[i] == 'f' && buffer[i+1] == 'm' && buffer[i+2] == 't' && buffer[i+3] == ' ') {
-                uint32 sampleRate = (uint32)buffer[i+12] | ((uint32)buffer[i+13] << 8) | 
-                                    ((uint32)buffer[i+14] << 16) | ((uint32)buffer[i+15] << 24);
-                
-                if (sampleRate >= 11025 && sampleRate <= 96000) {
-                    speed = (float)sampleRate / 44100.0f;
-                }
-                break;
-            }
-        }
-    }
-    return speed;
-}
-
 int32 RSDK::Legacy::PlayMusic(int32 trackID)
 {
     TrackInfo *track = &musicTracks[trackID & 0xF];
@@ -88,17 +44,9 @@ int32 RSDK::Legacy::PlayMusic(int32 trackID)
         if (!loopPoint && track->trackLoop)
             loopPoint = 1;
 
-        // --- DYNAMIC AUDIO SPEED PATCH ---
-        // Automatically check this specific track's sample rate
-        currentMusicSpeedFix = GetAudioSpeedFix(track->fileName);
-
         musicCurrentTrack = trackID;
-        // Make sure the last parameter here is 'false' so it loads synchronously
-        musicChannel      = PlayStream(track->fileName, musicChannel, startPos, loopPoint, false);
+        musicChannel      = PlayStream(track->fileName, musicChannel, startPos, loopPoint, true);
         musicVolume       = 100;
-
-        // Apply the dynamic speed correction immediately
-        SetChannelAttributes(musicChannel, 1.0f, 0.0f, currentMusicSpeedFix);
     }
 
     return musicChannel;
@@ -107,8 +55,7 @@ int32 RSDK::Legacy::PlayMusic(int32 trackID)
 void RSDK::Legacy::SetMusicVolume(int32 volume)
 {
     musicVolume = CLAMP(volume, 0, 100);
-    // Change the update loop to use our dynamic global variable
-    SetChannelAttributes(musicChannel, musicVolume / 100.0f, 0.0f, currentMusicSpeedFix);
+    SetChannelAttributes(musicChannel, musicVolume * 0.01f, 0.f, 1.f);
 }
 
 void RSDK::Legacy::v4::SwapMusicTrack(const char *filePath, uint8 trackID, uint32 loopPoint, uint32 ratio)
@@ -166,11 +113,7 @@ void RSDK::Legacy::v4::SetSfxAttributes(int32 sfxID, int32 loop, int8 pan)
 {
     for (int32 c = 0; c < CHANNEL_COUNT; ++c) {
         if (channels[c].soundID == sfxID && channels[c].state == CHANNEL_SFX) {
-            
-            // WEBAUDIO FIX: Completely removed RSDK::SetChannelAttributes from here!
-            // Updating attributes on stereo SFX causes the WASM audio nodes to crash and mute.
-            // Leaving this blank lets the sound safely play at normal volume and center pan.
-            
+            RSDK::SetChannelAttributes(c, 1.0, pan / 100.0f, 1.0);
             if (loop != -1)
                 channels[c].loop = loop ? 0 : -1;
         }
