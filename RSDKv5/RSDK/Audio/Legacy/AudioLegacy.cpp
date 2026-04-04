@@ -1,4 +1,5 @@
 
+static float currentMusicSpeedFix = 1.0f;
 
 int32 RSDK::Legacy::globalSFXCount = 0;
 int32 RSDK::Legacy::stageSFXCount  = 0;
@@ -26,6 +27,46 @@ void RSDK::Legacy::SetMusicTrack(const char *filePath, uint8 trackID, bool32 loo
     track->loopPoint = loopPoint;
 }
 
+static float GetAudioSpeedFix(const char* filepath) {
+    RSDK::FileInfo info;
+    float speed = 1.0f;
+    
+    // Open the file through the mod loader's virtual file system
+    if (RSDK::LoadFile(&info, filepath, RSDK::FMODE_READ)) {
+        uint8 buffer[128]; // 128 bytes is enough to grab the header
+        RSDK::ReadBytes(&info, buffer, sizeof(buffer));
+        RSDK::CloseFile(&info);
+        
+        // --- Check for OGG Vorbis ---
+        if (buffer[0] == 'O' && buffer[1] == 'g' && buffer[2] == 'g' && buffer[3] == 'S') {
+            for (int i = 0; i < sizeof(buffer) - 15; i++) {
+                // Search for the "vorbis" identifier string
+                if (buffer[i] == 'v' && buffer[i+1] == 'o' && buffer[i+2] == 'r' && 
+                    buffer[i+3] == 'b' && buffer[i+4] == 'i' && buffer[i+5] == 's') {
+                    
+                    // The sample rate is stored 11 bytes after the 'v'
+                    uint32 sampleRate = buffer[i+11] | (buffer[i+12] << 8) | 
+                                       (buffer[i+13] << 16) | (buffer[i+14] << 24);
+                    
+                    if (sampleRate > 0) {
+                        speed = (float)sampleRate / 44100.0f;
+                    }
+                    break;
+                }
+            }
+        }
+        // --- Check for WAV (just in case) ---
+        else if (buffer[0] == 'R' && buffer[1] == 'I' && buffer[2] == 'F' && buffer[3] == 'F') {
+            uint32 sampleRate = buffer[24] | (buffer[25] << 8) | (buffer[26] << 16) | (buffer[27] << 24);
+            if (sampleRate > 0) {
+                speed = (float)sampleRate / 44100.0f;
+            }
+        }
+    }
+    
+    return speed;
+}
+
 int32 RSDK::Legacy::PlayMusic(int32 trackID)
 {
     TrackInfo *track = &musicTracks[trackID & 0xF];
@@ -44,20 +85,17 @@ int32 RSDK::Legacy::PlayMusic(int32 trackID)
         if (!loopPoint && track->trackLoop)
             loopPoint = 1;
 
+        // --- DYNAMIC AUDIO SPEED PATCH ---
+        // Automatically check this specific track's sample rate
+        currentMusicSpeedFix = GetAudioSpeedFix(track->fileName);
+
         musicCurrentTrack = trackID;
+        // Make sure the last parameter here is 'false' so it loads synchronously
         musicChannel      = PlayStream(track->fileName, musicChannel, startPos, loopPoint, false);
         musicVolume       = 100;
 
-        // --- AUDIO SPEED PATCH START ---
-        // Calculate the ratio between the mod's 48000Hz files and the engine's 44100Hz mixer.
-        // This equals ~1.0884f, which speeds the audio back up to its proper pitch/tempo.
-        float sampleRateFix = 48000.0f / 44100.0f;
-        
-        // Apply the speed correction immediately to the active music channel.
-        // SetChannelAttributes arguments: (channelID, volume, pan, speed)
-        // Note: We use 1.0f for volume here because v5 uses a 0.0 to 1.0 scale internally.
-        SetChannelAttributes(musicChannel, 1.0f, 0.0f, sampleRateFix);
-        // --- AUDIO SPEED PATCH END ---
+        // Apply the dynamic speed correction immediately
+        SetChannelAttributes(musicChannel, 1.0f, 0.0f, currentMusicSpeedFix);
     }
 
     return musicChannel;
