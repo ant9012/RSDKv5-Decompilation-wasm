@@ -170,7 +170,10 @@ void RSDK::Legacy::v4::SetSfxAttributes(int32 sfxID, int32 loop, int8 pan)
 {
     for (int32 c = 0; c < CHANNEL_COUNT; ++c) {
         if (channels[c].soundID == sfxID && channels[c].state == CHANNEL_SFX) {
-            RSDK::SetChannelAttributes(c, 1.0, pan / 100.0f, 1.0);
+            
+            // FIX: Replaced 'pan / 100.0f' with '0.0f' to prevent the WebAudio extreme-pan mute bug
+            RSDK::SetChannelAttributes(c, 1.0, 0.0f, 1.0);
+            
             if (loop != -1)
                 channels[c].loop = loop ? 0 : -1;
         }
