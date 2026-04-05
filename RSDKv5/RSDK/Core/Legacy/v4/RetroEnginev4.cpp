@@ -1,5 +1,13 @@
 #include "RetroEnginev4.hpp"
 
+// Wrapper called from script via CallNativeFunction2(LoadVideo, "filename").
+// v5U's RSDK::LoadVideo prepends "Data/Video/" and uses the filename as-is;
+// pass the full filename including the .ogv extension.
+static void NativeFunc_LoadVideo(int32 *unused, char *filename)
+{
+    RSDK::LoadVideo(filename, 0.0, nullptr);
+}
+
 bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
 {
     char strBuffer[0x40];
@@ -246,13 +254,6 @@ bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
 #endif
 
     return loaded;
-}
-
-// Wrapper called from script via CallNativeFunction2(LoadVideo, "filename")
-// scriptText holds the filename; the engine uses "Data/Video/<name>" internally.
-static void NativeFunc_LoadVideo(int32 *unused, char *filename)
-{
-    RSDK::LoadVideo(filename, 0.0, nullptr);
 }
 
 void RSDK::Legacy::v4::ProcessEngine()
