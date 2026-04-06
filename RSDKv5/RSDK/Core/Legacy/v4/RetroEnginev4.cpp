@@ -49,6 +49,16 @@ void RSDK::Legacy::v4::ShowPromoPopup(int32 *id)
     // no-op
 }
 
+void RSDK::Legacy::v4::NativePlayerWaitingAds()
+{
+    SetGlobalVariableByName("waitingAds.result", 2);
+}
+
+void RSDK::Legacy::v4::NativeWaterPlayerWaitingAds()
+{
+    SetGlobalVariableByName("waitingAds.water", 2);
+}
+
 bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
 {
     char strBuffer[0x40];
@@ -243,20 +253,20 @@ bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
     nativeFunctionCount = 0;
 
     nativeFunctionCount = 0;
-    AddNativeFunction("SetAchievement", SetAchievement);
-    AddNativeFunction("SetLeaderboard", SetLeaderboard);
-    AddNativeFunction("HapticEffect", HapticEffect);
-
-    AddNativeFunction("Connect2PVS", Connect2PVS);
-    AddNativeFunction("Disconnect2PVS", Disconnect2PVS);
-    AddNativeFunction("SendEntity", SendEntity);
-    AddNativeFunction("SendValue", SendValue);
-    AddNativeFunction("ReceiveEntity", ReceiveEntity);
-    AddNativeFunction("ReceiveValue", ReceiveValue);
-    AddNativeFunction("TransmitGlobal", TransmitGlobal);
-    AddNativeFunction("ShowPromoPopup", ShowPromoPopup);
-
-    AddNativeFunction("NotifyCallback", NotifyCallback);
+    AddNativeFunction("SetAchievement",            SetAchievement);           // 0
+    AddNativeFunction("SetLeaderboard",            SetLeaderboard);           // 1
+    AddNativeFunction("HapticEffect",              HapticEffect);             // 2
+    AddNativeFunction("Connect2PVS",               Connect2PVS);              // 3
+    AddNativeFunction("Disconnect2PVS",            Disconnect2PVS);           // 4
+    AddNativeFunction("SendEntity",                SendEntity);               // 5
+    AddNativeFunction("SendValue",                 SendValue);                // 6
+    AddNativeFunction("ReceiveEntity",             ReceiveEntity);            // 7
+    AddNativeFunction("ReceiveValue",              ReceiveValue);             // 8
+    AddNativeFunction("TransmitGlobal",            TransmitGlobal);           // 9
+    AddNativeFunction("ShowPromoPopup",            ShowPromoPopup);           // 10
+    AddNativeFunction("NativePlayerWaitingAds",    NativePlayerWaitingAds);   // 11 ← missing
+    AddNativeFunction("NativeWaterPlayerWaitingAds", NativeWaterPlayerWaitingAds); // 12 ← missing
+    AddNativeFunction("NotifyCallback",            NotifyCallback);           // 13 ← bytecode target
     AddNativeFunction("LoadVideo", NativeFunc_LoadVideo);
 
 #if RETRO_USE_MOD_LOADER
