@@ -4,14 +4,6 @@
 // WASM wrappers - all must have same signature for function table
 // These wrappers decode the actual parameter types from the unified signature
 
-static void Wrapper_TransmitGlobal(int32 *param1, int32 *param2, int32 *param3, int32 *param4)
-{
-    // When called via CallNativeFunction2 with string:
-    // param1 points to scriptText buffer (reinterpreted)
-    // param2 is the value
-    // For WASM, we can't safely do this, so just no-op
-    // TransmitGlobal is only used for 2PVS which we don't support anyway
-}
 
 static void Wrapper_LoadVideo(int32 *param1, int32 *param2, int32 *param3, int32 *param4)
 {
@@ -19,71 +11,57 @@ static void Wrapper_LoadVideo(int32 *param1, int32 *param2, int32 *param3, int32
     PrintLog(PRINT_NORMAL, "LoadVideo called but not supported in WASM build");
 }
 
-// For functions that actually work with the 4-param signature, create passthrough wrappers
-static void Wrapper_SetAchievement(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
+// 2PVS stub implementations (no-op — multiplayer not supported in this build)
+void RSDK::Legacy::v4::Connect2PVS(int32 *gameLength, int32 *itemMode, int32 *unused1, int32 *unused2)
 {
-    RSDK::Legacy::v4::SetAchievement(p1, p2, p3, p4);
+    scriptEng.checkResult = 0; // pretend connection failed / not available
 }
 
-static void Wrapper_SetLeaderboard(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
+void RSDK::Legacy::v4::Disconnect2PVS(int32 *unused1, int32 *unused2, int32 *unused3, int32 *unused4)
 {
-    RSDK::Legacy::v4::SetLeaderboard(p1, p2, p3, p4);
+    // no-op
 }
 
-static void Wrapper_HapticEffect(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
+void RSDK::Legacy::v4::SendEntity(int32 *slot, int32 *active, int32 *unused1, int32 *unused2)
 {
-    RSDK::Legacy::v4::HapticEffect(p1, p2, p3, p4);
+    // no-op
 }
 
-static void Wrapper_Connect2PVS(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
+void RSDK::Legacy::v4::SendValue(int32 *value, int32 *active, int32 *unused1, int32 *unused2)
 {
-    RSDK::Legacy::v4::Connect2PVS(p1, p2, p3, p4);
+    // no-op
 }
 
-static void Wrapper_Disconnect2PVS(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
+void RSDK::Legacy::v4::ReceiveEntity(int32 *slot, int32 *active, int32 *unused1, int32 *unused2)
 {
-    RSDK::Legacy::v4::Disconnect2PVS(p1, p2, p3, p4);
+    scriptEng.checkResult = -1; // scripts check "if ReceiveValue > -1" to guard
 }
 
-static void Wrapper_SendEntity(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
+void RSDK::Legacy::v4::ReceiveValue(int32 *value, int32 *active, int32 *unused1, int32 *unused2)
 {
-    RSDK::Legacy::v4::SendEntity(p1, p2, p3, p4);
+    scriptEng.checkResult = -1; // same guard pattern — returning -1 skips the receive path
 }
 
-static void Wrapper_SendValue(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
+void RSDK::Legacy::v4::TransmitGlobal(int32 *varName, int32 *value, int32 *unused1, int32 *unused2)
 {
-    RSDK::Legacy::v4::SendValue(p1, p2, p3, p4);
+    // no-op
 }
 
-static void Wrapper_ReceiveEntity(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
+void RSDK::Legacy::v4::ShowPromoPopup(int32 *id, int32 *unused1, int32 *unused2, int32 *unused3)
 {
-    RSDK::Legacy::v4::ReceiveEntity(p1, p2, p3, p4);
+    // no-op
 }
 
-static void Wrapper_ReceiveValue(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
+void RSDK::Legacy::v4::NativePlayerWaitingAds(int32 *unused1, int32 *unused2, int32 *unused3, int32 *unused4)
 {
-    RSDK::Legacy::v4::ReceiveValue(p1, p2, p3, p4);
+    SetGlobalVariableByName("waitingAds.result", 2);
 }
 
-static void Wrapper_ShowPromoPopup(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
+void RSDK::Legacy::v4::NativeWaterPlayerWaitingAds(int32 *unused1, int32 *unused2, int32 *unused3, int32 *unused4)
 {
-    RSDK::Legacy::v4::ShowPromoPopup(p1, p2, p3, p4);
+    SetGlobalVariableByName("waitingAds.water", 2);
 }
 
-static void Wrapper_NativePlayerWaitingAds(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
-{
-    RSDK::Legacy::v4::NativePlayerWaitingAds(p1, p2, p3, p4);
-}
-
-static void Wrapper_NativeWaterPlayerWaitingAds(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
-{
-    RSDK::Legacy::v4::NativeWaterPlayerWaitingAds(p1, p2, p3, p4);
-}
-
-static void Wrapper_NotifyCallback(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
-{
-    RSDK::Legacy::v4::NotifyCallback(p1, p2, p3, p4);
-}
 #endif
 
 bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
