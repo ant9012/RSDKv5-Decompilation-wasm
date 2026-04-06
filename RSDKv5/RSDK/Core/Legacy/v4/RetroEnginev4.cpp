@@ -5,10 +5,10 @@
 // These wrappers decode the actual parameter types from the unified signature
 
 
-static void Wrapper_LoadVideo(int32 *param1, int32 *param2, int32 *param3, int32 *param4)
+static void NativeFunc_LoadVideo(int32 *unused, int32 *filename, int32 *unused2, int32 *unused3)
 {
-    // LoadVideo is called with string parameter, not supported in WASM
-    PrintLog(PRINT_NORMAL, "LoadVideo called but not supported in WASM build");
+    // LoadVideo will be handled specially in ScriptLegacyv4.cpp
+    // This should not be called directly
 }
 
 // 2PVS stub implementations (no-op — multiplayer not supported in this build)
