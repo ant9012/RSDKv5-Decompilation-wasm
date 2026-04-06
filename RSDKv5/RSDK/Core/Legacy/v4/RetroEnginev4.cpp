@@ -9,52 +9,52 @@ static void NativeFunc_LoadVideo(int32 *unused, char *filename)
 }
 
 // 2PVS stub implementations (no-op — multiplayer not supported in this build)
-void RSDK::Legacy::v4::Connect2PVS(int32 *gameLength, int32 *itemMode)
+void RSDK::Legacy::v4::Connect2PVS(int32 *gameLength, int32 *itemMode, int32 *unused1, int32 *unused2)
 {
-    scriptEng.checkResult = 0; // pretend connection failed / not available
+    scriptEng.checkResult = 0;
 }
 
-void RSDK::Legacy::v4::Disconnect2PVS()
-{
-    // no-op
-}
-
-void RSDK::Legacy::v4::SendEntity(int32 *slot, int32 *active)
+void RSDK::Legacy::v4::Disconnect2PVS(int32 *unused1, int32 *unused2, int32 *unused3, int32 *unused4)
 {
     // no-op
 }
 
-void RSDK::Legacy::v4::SendValue(int32 *value, int32 *active)
+void RSDK::Legacy::v4::SendEntity(int32 *slot, int32 *active, int32 *unused1, int32 *unused2)
 {
     // no-op
 }
 
-void RSDK::Legacy::v4::ReceiveEntity(int32 *slot, int32 *active)
-{
-    scriptEng.checkResult = -1; // scripts check "if ReceiveValue > -1" to guard
-}
-
-void RSDK::Legacy::v4::ReceiveValue(int32 *value, int32 *active)
-{
-    scriptEng.checkResult = -1; // same guard pattern — returning -1 skips the receive path
-}
-
-void RSDK::Legacy::v4::TransmitGlobal(const char *varName, int32 *value)
+void RSDK::Legacy::v4::SendValue(int32 *value, int32 *active, int32 *unused1, int32 *unused2)
 {
     // no-op
 }
 
-void RSDK::Legacy::v4::ShowPromoPopup(int32 *id)
+void RSDK::Legacy::v4::ReceiveEntity(int32 *slot, int32 *active, int32 *unused1, int32 *unused2)
+{
+    scriptEng.checkResult = -1;
+}
+
+void RSDK::Legacy::v4::ReceiveValue(int32 *value, int32 *active, int32 *unused1, int32 *unused2)
+{
+    scriptEng.checkResult = -1;
+}
+
+void RSDK::Legacy::v4::TransmitGlobal(const char *varName, int32 *value, int32 *unused1, int32 *unused2)
 {
     // no-op
 }
 
-void RSDK::Legacy::v4::NativePlayerWaitingAds(int32 *unused1, int32 *unused2)
+void RSDK::Legacy::v4::ShowPromoPopup(int32 *id, int32 *unused1, int32 *unused2, int32 *unused3)
+{
+    // no-op
+}
+
+void RSDK::Legacy::v4::NativePlayerWaitingAds(int32 *unused1, int32 *unused2, int32 *unused3, int32 *unused4)
 {
     SetGlobalVariableByName("waitingAds.result", 2);
 }
 
-void RSDK::Legacy::v4::NativeWaterPlayerWaitingAds(int32 *unused1, int32 *unused2)
+void RSDK::Legacy::v4::NativeWaterPlayerWaitingAds(int32 *unused1, int32 *unused2, int32 *unused3, int32 *unused4)
 {
     SetGlobalVariableByName("waitingAds.water", 2);
 }
