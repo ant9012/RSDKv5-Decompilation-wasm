@@ -17,7 +17,13 @@ struct GlobalVariable {
     int32 value;
 };
 
+#ifdef __EMSCRIPTEN__
+// WASM requires typed function pointers - use maximum parameter signature
+typedef void (*NativeFunctionPtr)(int32*, int32*, int32*, int32*);
+extern NativeFunctionPtr nativeFunction[LEGACY_v4_NATIIVEFUNCTION_COUNT];
+#else
 extern void *nativeFunction[LEGACY_v4_NATIIVEFUNCTION_COUNT];
+#endif
 extern int32 nativeFunctionCount;
 
 extern int32 globalVariablesCount;
