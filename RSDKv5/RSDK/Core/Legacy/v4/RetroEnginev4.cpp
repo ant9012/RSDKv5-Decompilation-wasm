@@ -64,6 +64,26 @@ void RSDK::Legacy::v4::NativeWaterPlayerWaitingAds(int32 *unused1, int32 *unused
 
 #endif
 
+#ifdef __EMSCRIPTEN__
+void RSDK::Legacy::v4::NativeFunction_StringDispatch(int funcIndex, int32 *param1, const char *stringParam)
+{
+    switch(funcIndex) {
+        case 9: // TransmitGlobal - index based on AddNativeFunction order
+            // no-op for 2PVS
+            break;
+            
+        case 14: // LoadVideo - index based on AddNativeFunction order
+            if (stringParam && StrLength(stringParam))
+                RSDK::LoadVideo(stringParam, 0.0, nullptr);
+            break;
+            
+        default:
+            PrintLog(PRINT_NORMAL, "Unknown string native function: %d", funcIndex);
+            break;
+    }
+}
+#endif
+
 bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
 {
     char strBuffer[0x40];
