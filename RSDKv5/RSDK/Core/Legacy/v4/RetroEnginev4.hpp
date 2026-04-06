@@ -25,16 +25,16 @@ void LoadXMLPlayers(const tinyxml2::XMLElement* gameElement);
 void LoadXMLStages(const tinyxml2::XMLElement* gameElement);
 #endif
 
-void Connect2PVS(int32 *gameLength, int32 *itemMode);
-void Disconnect2PVS();
-void SendEntity(int32 *slot, int32 *active);
-void SendValue(int32 *value, int32 *active);
-void ReceiveEntity(int32 *slot, int32 *active);
-void ReceiveValue(int32 *value, int32 *active);
-void TransmitGlobal(const char *varName, int32 *value);
-void ShowPromoPopup(int32 *id);
-void NativePlayerWaitingAds(int32 *unused1, int32 *unused2);
-void NativeWaterPlayerWaitingAds(int32 *unused1, int32 *unused2);
+void Connect2PVS(int32 *gameLength, int32 *itemMode, int32 *unused1, int32 *unused2);
+void Disconnect2PVS(int32 *unused1, int32 *unused2, int32 *unused3, int32 *unused4);
+void SendEntity(int32 *slot, int32 *active, int32 *unused1, int32 *unused2);
+void SendValue(int32 *value, int32 *active, int32 *unused1, int32 *unused2);
+void ReceiveEntity(int32 *slot, int32 *active, int32 *unused1, int32 *unused2);
+void ReceiveValue(int32 *value, int32 *active, int32 *unused1, int32 *unused2);
+void TransmitGlobal(const char *varName, int32 *value, int32 *unused1, int32 *unused2);
+void ShowPromoPopup(int32 *id, int32 *unused1, int32 *unused2, int32 *unused3);
+void NativePlayerWaitingAds(int32 *unused1, int32 *unused2, int32 *unused3, int32 *unused4);
+void NativeWaterPlayerWaitingAds(int32 *unused1, int32 *unused2, int32 *unused3, int32 *unused4);
 
 } // namespace v4
 } // namespace Legacy
