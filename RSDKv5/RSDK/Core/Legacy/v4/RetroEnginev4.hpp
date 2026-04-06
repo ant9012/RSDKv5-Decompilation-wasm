@@ -31,7 +31,7 @@ void SendEntity(int32 *slot, int32 *active, int32 *unused1, int32 *unused2);
 void SendValue(int32 *value, int32 *active, int32 *unused1, int32 *unused2);
 void ReceiveEntity(int32 *slot, int32 *active, int32 *unused1, int32 *unused2);
 void ReceiveValue(int32 *value, int32 *active, int32 *unused1, int32 *unused2);
-void TransmitGlobal(const char *varName, int32 *value, int32 *unused1, int32 *unused2);
+void TransmitGlobal(int32 *varName, int32 *value, int32 *unused1, int32 *unused2);
 void ShowPromoPopup(int32 *id, int32 *unused1, int32 *unused2, int32 *unused3);
 void NativePlayerWaitingAds(int32 *unused1, int32 *unused2, int32 *unused3, int32 *unused4);
 void NativeWaterPlayerWaitingAds(int32 *unused1, int32 *unused2, int32 *unused3, int32 *unused4);
