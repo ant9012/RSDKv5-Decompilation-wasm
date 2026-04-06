@@ -5145,6 +5145,40 @@ void RSDK::Legacy::v4::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                 scriptEng.operands[0] = abs(scriptEng.operands[0]);
                 break;
             }
+            #ifdef __EMSCRIPTEN__
+case FUNC_CALLNATIVEFUNCTION:
+    opcodeSize = 0;
+    if (scriptEng.operands[0] >= 0 && scriptEng.operands[0] < LEGACY_v4_NATIIVEFUNCTION_COUNT) {
+        if (nativeFunction[scriptEng.operands[0]])
+            nativeFunction[scriptEng.operands[0]](nullptr, nullptr, nullptr, nullptr);
+    }
+    break;
+case FUNC_CALLNATIVEFUNCTION2:
+    if (scriptEng.operands[0] >= 0 && scriptEng.operands[0] < LEGACY_v4_NATIIVEFUNCTION_COUNT) {
+        if (scriptText && StrLength(scriptText)) {
+            // String parameter case - need special handling, skip for now
+            PrintLog(PRINT_ERROR, "String native functions not supported in WASM");
+        }
+        else {
+            if (nativeFunction[scriptEng.operands[0]])
+                nativeFunction[scriptEng.operands[0]](&scriptEng.operands[1], &scriptEng.operands[2], nullptr, nullptr);
+        }
+    }
+    break;
+case FUNC_CALLNATIVEFUNCTION4:
+    if (scriptEng.operands[0] >= 0 && scriptEng.operands[0] < LEGACY_v4_NATIIVEFUNCTION_COUNT) {
+        if (scriptText && StrLength(scriptText)) {
+            // String parameter case
+            PrintLog(PRINT_ERROR, "String native functions not supported in WASM");
+        }
+        else {
+            if (nativeFunction[scriptEng.operands[0]])
+                nativeFunction[scriptEng.operands[0]](&scriptEng.operands[1], &scriptEng.operands[2], 
+                                                       &scriptEng.operands[3], &scriptEng.operands[4]);
+        }
+    }
+    break;
+#else
             case FUNC_CALLNATIVEFUNCTION:
                 opcodeSize = 0;
                 if (scriptEng.operands[0] >= 0 && scriptEng.operands[0] < LEGACY_v4_NATIIVEFUNCTION_COUNT) {
@@ -5183,6 +5217,8 @@ void RSDK::Legacy::v4::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                     }
                 }
                 break;
+#endif
+
             case FUNC_SETOBJECTRANGE: {
                 // FUNCTION PARAMS:
                 // scriptEng.operands[0] = range
