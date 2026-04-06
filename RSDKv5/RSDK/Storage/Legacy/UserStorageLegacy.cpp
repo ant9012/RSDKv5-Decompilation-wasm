@@ -1,6 +1,10 @@
 
 
+#ifdef __EMSCRIPTEN__
+RSDK::Legacy::NativeFunctionPtr RSDK::Legacy::nativeFunction[LEGACY_v4_NATIIVEFUNCTION_COUNT];
+#else
 void *RSDK::Legacy::nativeFunction[LEGACY_v4_NATIIVEFUNCTION_COUNT];
+#endif
 int32 RSDK::Legacy::nativeFunctionCount = 0;
 
 int32 RSDK::Legacy::globalVariablesCount = 0;
