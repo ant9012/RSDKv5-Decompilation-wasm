@@ -35,6 +35,10 @@ void TransmitGlobal(int32 *varName, int32 *value, int32 *unused1, int32 *unused2
 void ShowPromoPopup(int32 *id, int32 *unused1, int32 *unused2, int32 *unused3);
 void NativePlayerWaitingAds(int32 *unused1, int32 *unused2, int32 *unused3, int32 *unused4);
 void NativeWaterPlayerWaitingAds(int32 *unused1, int32 *unused2, int32 *unused3, int32 *unused4);
+#ifdef __EMSCRIPTEN__
+void NativeFunction_StringDispatch(int funcIndex, int32 *param1, const char *stringParam);
+#endif
+
 
 } // namespace v4
 } // namespace Legacy
