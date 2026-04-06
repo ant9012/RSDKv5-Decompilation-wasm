@@ -25,5 +25,14 @@ void LoadXMLPlayers(const tinyxml2::XMLElement* gameElement);
 void LoadXMLStages(const tinyxml2::XMLElement* gameElement);
 #endif
 
+void Connect2PVS(int32 *gameLength, int32 *itemMode);
+void Disconnect2PVS();
+void SendEntity(int32 *slot, int32 *active);
+void SendValue(int32 *value, int32 *active);
+void ReceiveEntity(int32 *slot, int32 *active);
+void ReceiveValue(int32 *value, int32 *active);
+void TransmitGlobal(const char *varName, int32 *value);
+void ShowPromoPopup(int32 *id);
+
 } // namespace v4
 } // namespace Legacy
