@@ -255,41 +255,23 @@ bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
     }
 
     // These need to be set every time its reloaded
-    nativeFunctionCount = 0;
+nativeFunctionCount = 0;
 
-    nativeFunctionCount = 0;
-    #ifdef __EMSCRIPTEN__
-    AddNativeFunction("SetAchievement", Wrapper_SetAchievement);
-    AddNativeFunction("SetLeaderboard", Wrapper_SetLeaderboard);
-    AddNativeFunction("HapticEffect", Wrapper_HapticEffect);
-    AddNativeFunction("Connect2PVS", Wrapper_Connect2PVS);
-    AddNativeFunction("Disconnect2PVS", Wrapper_Disconnect2PVS);
-    AddNativeFunction("SendEntity", Wrapper_SendEntity);
-    AddNativeFunction("SendValue", Wrapper_SendValue);
-    AddNativeFunction("ReceiveEntity", Wrapper_ReceiveEntity);
-    AddNativeFunction("ReceiveValue", Wrapper_ReceiveValue);
-    AddNativeFunction("TransmitGlobal", Wrapper_TransmitGlobal);
-    AddNativeFunction("ShowPromoPopup", Wrapper_ShowPromoPopup);
-    AddNativeFunction("NativePlayerWaitingAds", Wrapper_NativePlayerWaitingAds);
-    AddNativeFunction("NativeWaterPlayerWaitingAds", Wrapper_NativeWaterPlayerWaitingAds);
-    AddNativeFunction("NotifyCallback", Wrapper_NotifyCallback);
-    AddNativeFunction("LoadVideo", Wrapper_LoadVideo);
-#else
-    AddNativeFunction("SetAchievement",            SetAchievement);           // 0
-    AddNativeFunction("SetLeaderboard",            SetLeaderboard);           // 1
-    AddNativeFunction("HapticEffect",              HapticEffect);             // 2
-    AddNativeFunction("Connect2PVS",               Connect2PVS);              // 3
-    AddNativeFunction("Disconnect2PVS",            Disconnect2PVS);           // 4
-    AddNativeFunction("SendEntity",                SendEntity);               // 5
-    AddNativeFunction("SendValue",                 SendValue);                // 6
-    AddNativeFunction("ReceiveEntity",             ReceiveEntity);            // 7
-    AddNativeFunction("ReceiveValue",              ReceiveValue);             // 8
-    AddNativeFunction("TransmitGlobal",            TransmitGlobal);           // 9
-    AddNativeFunction("ShowPromoPopup",            ShowPromoPopup);           // 10
-    AddNativeFunction("NativePlayerWaitingAds",    NativePlayerWaitingAds);   // 11 ← missing
-    AddNativeFunction("NativeWaterPlayerWaitingAds", NativeWaterPlayerWaitingAds); // 12 ← missing
-    AddNativeFunction("NotifyCallback",            NotifyCallback);           // 13 ← bytecode target
-#endif
+AddNativeFunction("SetAchievement", SetAchievement);                           // 0
+AddNativeFunction("SetLeaderboard", SetLeaderboard);                           // 1
+AddNativeFunction("HapticEffect", HapticEffect);                               // 2
+AddNativeFunction("Connect2PVS", Connect2PVS);                                 // 3
+AddNativeFunction("Disconnect2PVS", Disconnect2PVS);                           // 4
+AddNativeFunction("SendEntity", SendEntity);                                   // 5
+AddNativeFunction("SendValue", SendValue);                                     // 6
+AddNativeFunction("ReceiveEntity", ReceiveEntity);                             // 7
+AddNativeFunction("ReceiveValue", ReceiveValue);                               // 8
+AddNativeFunction("TransmitGlobal", TransmitGlobal);                           // 9
+AddNativeFunction("ShowPromoPopup", ShowPromoPopup);                           // 10
+AddNativeFunction("NativePlayerWaitingAds", NativePlayerWaitingAds);           // 11
+AddNativeFunction("NativeWaterPlayerWaitingAds", NativeWaterPlayerWaitingAds); // 12
+AddNativeFunction("NotifyCallback", NotifyCallback);                           // 13
+AddNativeFunction("LoadVideo", NativeFunc_LoadVideo);                          // 14
 
 #if RETRO_USE_MOD_LOADER
     AddNativeFunction("ExitGame", ExitGame);
