@@ -247,14 +247,14 @@ bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
     AddNativeFunction("SetLeaderboard", SetLeaderboard);
     AddNativeFunction("HapticEffect", HapticEffect);
 
-    // AddNativeFunction("Connect2PVS", Connect2PVS);
-    // AddNativeFunction("Disconnect2PVS", Disconnect2PVS);
-    // AddNativeFunction("SendEntity", SendEntity);
-    // AddNativeFunction("SendValue", SendValue);
-    // AddNativeFunction("ReceiveEntity", ReceiveEntity);
-    // AddNativeFunction("ReceiveValue", ReceiveValue);
-    // AddNativeFunction("TransmitGlobal", TransmitGlobal);
-    // AddNativeFunction("ShowPromoPopup", ShowPromoPopup);
+    AddNativeFunction("Connect2PVS", Connect2PVS);
+    AddNativeFunction("Disconnect2PVS", Disconnect2PVS);
+    AddNativeFunction("SendEntity", SendEntity);
+    AddNativeFunction("SendValue", SendValue);
+    AddNativeFunction("ReceiveEntity", ReceiveEntity);
+    AddNativeFunction("ReceiveValue", ReceiveValue);
+    AddNativeFunction("TransmitGlobal", TransmitGlobal);
+    AddNativeFunction("ShowPromoPopup", ShowPromoPopup);
 
     AddNativeFunction("NotifyCallback", NotifyCallback);
     AddNativeFunction("LoadVideo", NativeFunc_LoadVideo);
