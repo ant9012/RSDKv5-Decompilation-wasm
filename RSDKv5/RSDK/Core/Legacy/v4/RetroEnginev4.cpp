@@ -49,12 +49,12 @@ void RSDK::Legacy::v4::ShowPromoPopup(int32 *id)
     // no-op
 }
 
-void RSDK::Legacy::v4::NativePlayerWaitingAds()
+void RSDK::Legacy::v4::NativePlayerWaitingAds(int32 *unused1, int32 *unused2)
 {
     SetGlobalVariableByName("waitingAds.result", 2);
 }
 
-void RSDK::Legacy::v4::NativeWaterPlayerWaitingAds()
+void RSDK::Legacy::v4::NativeWaterPlayerWaitingAds(int32 *unused1, int32 *unused2)
 {
     SetGlobalVariableByName("waitingAds.water", 2);
 }
