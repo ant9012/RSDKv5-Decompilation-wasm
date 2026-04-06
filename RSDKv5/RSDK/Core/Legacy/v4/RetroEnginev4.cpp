@@ -86,26 +86,6 @@ static void Wrapper_NotifyCallback(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
 }
 #endif
 
-#ifdef __EMSCRIPTEN__
-// Special dispatcher for functions that need string parameters
-void RSDK::Legacy::v4::NativeFunction_StringDispatch(int funcIndex, int32 *param1, const char *stringParam)
-{
-    switch(funcIndex) {
-        case 9: // TransmitGlobal index (adjust based on your registration order)
-            // TransmitGlobal with string - no-op for 2PVS
-            break;
-            
-        case 14: // LoadVideo index (adjust based on your registration order)
-            RSDK::LoadVideo(stringParam, 0.0, nullptr);
-            break;
-            
-        default:
-            PrintLog(PRINT_ERROR, "Unknown string native function called: %d", funcIndex);
-            break;
-    }
-}
-#endif
-
 bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
 {
     char strBuffer[0x40];
