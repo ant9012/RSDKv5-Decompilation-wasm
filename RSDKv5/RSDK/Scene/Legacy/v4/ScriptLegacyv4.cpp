@@ -5155,16 +5155,18 @@ case FUNC_CALLNATIVEFUNCTION:
     break;
 case FUNC_CALLNATIVEFUNCTION2:
     if (scriptEng.operands[0] >= 0 && scriptEng.operands[0] < LEGACY_v4_NATIIVEFUNCTION_COUNT) {
-        if (scriptText && StrLength(scriptText)) {
-            // String parameter case - need special handling, skip for now
-            PrintLog(PRINT_ERROR, "String native functions not supported in WASM");
+        if (StrLength(scriptText)) {
+            // String parameter - use special dispatcher
+            RSDK::Legacy::v4::NativeFunction_StringDispatch(scriptEng.operands[0], &scriptEng.operands[2], scriptText);
         }
         else {
+            // Normal call
             if (nativeFunction[scriptEng.operands[0]])
                 nativeFunction[scriptEng.operands[0]](&scriptEng.operands[1], &scriptEng.operands[2], nullptr, nullptr);
         }
     }
     break;
+            
 case FUNC_CALLNATIVEFUNCTION4:
     if (scriptEng.operands[0] >= 0 && scriptEng.operands[0] < LEGACY_v4_NATIIVEFUNCTION_COUNT) {
         if (scriptText && StrLength(scriptText)) {
