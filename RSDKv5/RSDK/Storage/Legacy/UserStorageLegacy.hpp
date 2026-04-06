@@ -35,11 +35,19 @@ int32 GetGlobalVariableByName(const char *name);
 void SetGlobalVariableByName(const char *name, int32 value);
 int32 GetGlobalVariableID(const char *name);
 
-#define AddNativeFunction(name, funcPtr)                                                                                                             \
-    if (nativeFunctionCount < LEGACY_v4_NATIIVEFUNCTION_COUNT) {                                                                                     \
-        SetGlobalVariableByName(name, nativeFunctionCount);                                                                                          \
-        nativeFunction[nativeFunctionCount++] = (void *)funcPtr;                                                                                     \
+#ifdef __EMSCRIPTEN__
+#define AddNativeFunction(name, funcPtr) \
+    if (nativeFunctionCount < LEGACY_v4_NATIIVEFUNCTION_COUNT) { \
+        SetGlobalVariableByName(name, nativeFunctionCount); \
+        nativeFunction[nativeFunctionCount++] = (NativeFunctionPtr)funcPtr; \
     }
+#else
+#define AddNativeFunction(name, funcPtr) \
+    if (nativeFunctionCount < LEGACY_v4_NATIIVEFUNCTION_COUNT) { \
+        SetGlobalVariableByName(name, nativeFunctionCount); \
+        nativeFunction[nativeFunctionCount++] = (void *)funcPtr; \
+    }
+#endif
 
 bool32 ReadSaveRAM();
 bool32 WriteSaveRAM();
