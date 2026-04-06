@@ -8,6 +8,47 @@ static void NativeFunc_LoadVideo(int32 *unused, char *filename)
     RSDK::LoadVideo(filename, 0.0, nullptr);
 }
 
+// 2PVS stub implementations (no-op — multiplayer not supported in this build)
+void RSDK::Legacy::v4::Connect2PVS(int32 *gameLength, int32 *itemMode)
+{
+    scriptEng.checkResult = 0; // pretend connection failed / not available
+}
+
+void RSDK::Legacy::v4::Disconnect2PVS()
+{
+    // no-op
+}
+
+void RSDK::Legacy::v4::SendEntity(int32 *slot, int32 *active)
+{
+    // no-op
+}
+
+void RSDK::Legacy::v4::SendValue(int32 *value, int32 *active)
+{
+    // no-op
+}
+
+void RSDK::Legacy::v4::ReceiveEntity(int32 *slot, int32 *active)
+{
+    scriptEng.checkResult = -1; // scripts check "if ReceiveValue > -1" to guard
+}
+
+void RSDK::Legacy::v4::ReceiveValue(int32 *value, int32 *active)
+{
+    scriptEng.checkResult = -1; // same guard pattern — returning -1 skips the receive path
+}
+
+void RSDK::Legacy::v4::TransmitGlobal(const char *varName, int32 *value)
+{
+    // no-op
+}
+
+void RSDK::Legacy::v4::ShowPromoPopup(int32 *id)
+{
+    // no-op
+}
+
 bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
 {
     char strBuffer[0x40];
