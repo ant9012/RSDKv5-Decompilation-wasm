@@ -1,63 +1,110 @@
 #include "RetroEnginev4.hpp"
 
-// Wrapper called from script via CallNativeFunction2(LoadVideo, "filename").
-// v5U's RSDK::LoadVideo prepends "Data/Video/" and uses the filename as-is;
-// pass the full filename including the .ogv extension.
-static void NativeFunc_LoadVideo(int32 *unused, char *filename)
+#ifdef __EMSCRIPTEN__
+// WASM wrappers - all must have same signature for function table
+// These wrappers decode the actual parameter types from the unified signature
+
+static void Wrapper_TransmitGlobal(int32 *param1, int32 *param2, int32 *param3, int32 *param4)
 {
-    RSDK::LoadVideo(filename, 0.0, nullptr);
+    // When called via CallNativeFunction2 with string:
+    // param1 points to scriptText buffer (reinterpreted)
+    // param2 is the value
+    // For WASM, we can't safely do this, so just no-op
+    // TransmitGlobal is only used for 2PVS which we don't support anyway
 }
 
-// 2PVS stub implementations (no-op — multiplayer not supported in this build)
-void RSDK::Legacy::v4::Connect2PVS(int32 *gameLength, int32 *itemMode, int32 *unused1, int32 *unused2)
+static void Wrapper_LoadVideo(int32 *param1, int32 *param2, int32 *param3, int32 *param4)
 {
-    scriptEng.checkResult = 0;
+    // LoadVideo is called with string parameter, not supported in WASM
+    PrintLog(PRINT_NORMAL, "LoadVideo called but not supported in WASM build");
 }
 
-void RSDK::Legacy::v4::Disconnect2PVS(int32 *unused1, int32 *unused2, int32 *unused3, int32 *unused4)
+// For functions that actually work with the 4-param signature, create passthrough wrappers
+static void Wrapper_SetAchievement(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
 {
-    // no-op
+    RSDK::Legacy::v4::SetAchievement(p1, p2, p3, p4);
 }
 
-void RSDK::Legacy::v4::SendEntity(int32 *slot, int32 *active, int32 *unused1, int32 *unused2)
+static void Wrapper_SetLeaderboard(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
 {
-    // no-op
+    RSDK::Legacy::v4::SetLeaderboard(p1, p2, p3, p4);
 }
 
-void RSDK::Legacy::v4::SendValue(int32 *value, int32 *active, int32 *unused1, int32 *unused2)
+static void Wrapper_HapticEffect(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
 {
-    // no-op
+    RSDK::Legacy::v4::HapticEffect(p1, p2, p3, p4);
 }
 
-void RSDK::Legacy::v4::ReceiveEntity(int32 *slot, int32 *active, int32 *unused1, int32 *unused2)
+static void Wrapper_Connect2PVS(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
 {
-    scriptEng.checkResult = -1;
+    RSDK::Legacy::v4::Connect2PVS(p1, p2, p3, p4);
 }
 
-void RSDK::Legacy::v4::ReceiveValue(int32 *value, int32 *active, int32 *unused1, int32 *unused2)
+static void Wrapper_Disconnect2PVS(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
 {
-    scriptEng.checkResult = -1;
+    RSDK::Legacy::v4::Disconnect2PVS(p1, p2, p3, p4);
 }
 
-void RSDK::Legacy::v4::TransmitGlobal(const char *varName, int32 *value, int32 *unused1, int32 *unused2)
+static void Wrapper_SendEntity(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
 {
-    // no-op
+    RSDK::Legacy::v4::SendEntity(p1, p2, p3, p4);
 }
 
-void RSDK::Legacy::v4::ShowPromoPopup(int32 *id, int32 *unused1, int32 *unused2, int32 *unused3)
+static void Wrapper_SendValue(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
 {
-    // no-op
+    RSDK::Legacy::v4::SendValue(p1, p2, p3, p4);
 }
 
-void RSDK::Legacy::v4::NativePlayerWaitingAds(int32 *unused1, int32 *unused2, int32 *unused3, int32 *unused4)
+static void Wrapper_ReceiveEntity(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
 {
-    SetGlobalVariableByName("waitingAds.result", 2);
+    RSDK::Legacy::v4::ReceiveEntity(p1, p2, p3, p4);
 }
 
-void RSDK::Legacy::v4::NativeWaterPlayerWaitingAds(int32 *unused1, int32 *unused2, int32 *unused3, int32 *unused4)
+static void Wrapper_ReceiveValue(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
 {
-    SetGlobalVariableByName("waitingAds.water", 2);
+    RSDK::Legacy::v4::ReceiveValue(p1, p2, p3, p4);
 }
+
+static void Wrapper_ShowPromoPopup(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
+{
+    RSDK::Legacy::v4::ShowPromoPopup(p1, p2, p3, p4);
+}
+
+static void Wrapper_NativePlayerWaitingAds(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
+{
+    RSDK::Legacy::v4::NativePlayerWaitingAds(p1, p2, p3, p4);
+}
+
+static void Wrapper_NativeWaterPlayerWaitingAds(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
+{
+    RSDK::Legacy::v4::NativeWaterPlayerWaitingAds(p1, p2, p3, p4);
+}
+
+static void Wrapper_NotifyCallback(int32 *p1, int32 *p2, int32 *p3, int32 *p4)
+{
+    RSDK::Legacy::v4::NotifyCallback(p1, p2, p3, p4);
+}
+#endif
+
+#ifdef __EMSCRIPTEN__
+// Special dispatcher for functions that need string parameters
+void RSDK::Legacy::v4::NativeFunction_StringDispatch(int funcIndex, int32 *param1, const char *stringParam)
+{
+    switch(funcIndex) {
+        case 9: // TransmitGlobal index (adjust based on your registration order)
+            // TransmitGlobal with string - no-op for 2PVS
+            break;
+            
+        case 14: // LoadVideo index (adjust based on your registration order)
+            RSDK::LoadVideo(stringParam, 0.0, nullptr);
+            break;
+            
+        default:
+            PrintLog(PRINT_ERROR, "Unknown string native function called: %d", funcIndex);
+            break;
+    }
+}
+#endif
 
 bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
 {
@@ -253,6 +300,23 @@ bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
     nativeFunctionCount = 0;
 
     nativeFunctionCount = 0;
+    #ifdef __EMSCRIPTEN__
+    AddNativeFunction("SetAchievement", Wrapper_SetAchievement);
+    AddNativeFunction("SetLeaderboard", Wrapper_SetLeaderboard);
+    AddNativeFunction("HapticEffect", Wrapper_HapticEffect);
+    AddNativeFunction("Connect2PVS", Wrapper_Connect2PVS);
+    AddNativeFunction("Disconnect2PVS", Wrapper_Disconnect2PVS);
+    AddNativeFunction("SendEntity", Wrapper_SendEntity);
+    AddNativeFunction("SendValue", Wrapper_SendValue);
+    AddNativeFunction("ReceiveEntity", Wrapper_ReceiveEntity);
+    AddNativeFunction("ReceiveValue", Wrapper_ReceiveValue);
+    AddNativeFunction("TransmitGlobal", Wrapper_TransmitGlobal);
+    AddNativeFunction("ShowPromoPopup", Wrapper_ShowPromoPopup);
+    AddNativeFunction("NativePlayerWaitingAds", Wrapper_NativePlayerWaitingAds);
+    AddNativeFunction("NativeWaterPlayerWaitingAds", Wrapper_NativeWaterPlayerWaitingAds);
+    AddNativeFunction("NotifyCallback", Wrapper_NotifyCallback);
+    AddNativeFunction("LoadVideo", Wrapper_LoadVideo);
+#else
     AddNativeFunction("SetAchievement",            SetAchievement);           // 0
     AddNativeFunction("SetLeaderboard",            SetLeaderboard);           // 1
     AddNativeFunction("HapticEffect",              HapticEffect);             // 2
@@ -267,7 +331,7 @@ bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
     AddNativeFunction("NativePlayerWaitingAds",    NativePlayerWaitingAds);   // 11 ← missing
     AddNativeFunction("NativeWaterPlayerWaitingAds", NativeWaterPlayerWaitingAds); // 12 ← missing
     AddNativeFunction("NotifyCallback",            NotifyCallback);           // 13 ← bytecode target
-    AddNativeFunction("LoadVideo", NativeFunc_LoadVideo);
+#endif
 
 #if RETRO_USE_MOD_LOADER
     AddNativeFunction("ExitGame", ExitGame);
