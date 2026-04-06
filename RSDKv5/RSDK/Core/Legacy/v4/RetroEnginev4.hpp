@@ -33,8 +33,8 @@ void ReceiveEntity(int32 *slot, int32 *active);
 void ReceiveValue(int32 *value, int32 *active);
 void TransmitGlobal(const char *varName, int32 *value);
 void ShowPromoPopup(int32 *id);
-void NativePlayerWaitingAds();
-void NativeWaterPlayerWaitingAds();
+void NativePlayerWaitingAds(int32 *unused1, int32 *unused2);
+void NativeWaterPlayerWaitingAds(int32 *unused1, int32 *unused2);
 
 } // namespace v4
 } // namespace Legacy
