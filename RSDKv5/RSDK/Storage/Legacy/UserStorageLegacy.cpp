@@ -53,7 +53,7 @@ void RSDK::Legacy::v3::SetLeaderboard(int32 leaderboardID, int32 score)
 
 // Native Functions
 
-void RSDK::Legacy::v4::SetAchievement(int32 *achievementID, int32 *status)
+void RSDK::Legacy::v4::SetAchievement(int32 *achievementID, int32 *status, int32 *unused1, int32 *unused2)
 {
     if (!achievementID || !status)
         return;
@@ -65,13 +65,15 @@ void RSDK::Legacy::v4::SetAchievement(int32 *achievementID, int32 *status)
 
     achievementList[*achievementID].achieved = *status ? true : false;
 }
-void RSDK::Legacy::v4::SetLeaderboard(int32 *leaderboardID, int32 *score)
+
+void RSDK::Legacy::v4::SetLeaderboard(int32 *leaderboardID, int32 *score, int32 *unused1, int32 *unused2)
 {
     if (!leaderboardID || !score)
         return;
 
     PrintLog(PRINT_NORMAL, "[RSDKv4] Setting Leaderboard %d score to %d...", *leaderboardID, *score);
 }
+
 void RSDK::Legacy::v4::HapticEffect(int32 *id, int32 *unknown1, int32 *unknown2, int32 *unknown3) {}
 
 enum NotifyCallbackIDs {
