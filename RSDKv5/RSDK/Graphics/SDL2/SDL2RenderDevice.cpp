@@ -40,12 +40,19 @@ float RenderDevice::glVideoV = 1.0f;
 bool RenderDevice::Init()
 {
     #ifdef __EMSCRIPTEN__
-    // Force 3x Scale to fix up the display because 1x looks fucked
-    if (videoSettings.windowWidth <= 0) {
-        int multiplier = 3;
-        videoSettings.windowWidth  = videoSettings.pixWidth * multiplier;
-        videoSettings.windowHeight = videoSettings.pixHeight * multiplier;
-        videoSettings.windowed     = true;
+    {
+        // Use the actual device screen resolution (physical pixels via devicePixelRatio)
+        int screenW = EM_ASM_INT({ return Math.round(screen.width  * (window.devicePixelRatio || 1)); });
+        int screenH = EM_ASM_INT({ return Math.round(screen.height * (window.devicePixelRatio || 1)); });
+        if (screenW > 0 && screenH > 0) {
+            videoSettings.windowWidth  = screenW;
+            videoSettings.windowHeight = screenH;
+        } else {
+            // Fallback: 3x internal resolution
+            videoSettings.windowWidth  = videoSettings.pixWidth  * 3;
+            videoSettings.windowHeight = videoSettings.pixHeight * 3;
+        }
+        videoSettings.windowed = true;
     }
 #endif
     
