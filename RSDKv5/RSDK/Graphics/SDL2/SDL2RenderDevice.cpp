@@ -41,12 +41,15 @@ bool RenderDevice::Init()
 {
     #ifdef __EMSCRIPTEN__
     {
-        // Use the actual device screen resolution (physical pixels via devicePixelRatio)
-        int screenW = EM_ASM_INT({ return Math.round(screen.width  * (window.devicePixelRatio || 1)); });
-        int screenH = EM_ASM_INT({ return Math.round(screen.height * (window.devicePixelRatio || 1)); });
-        if (screenW > 0 && screenH > 0) {
-            videoSettings.windowWidth  = screenW;
-            videoSettings.windowHeight = screenH;
+        // Fill the full browser viewport at native resolution, like TestUFO.
+        // window.innerWidth/Height give the full CSS-pixel size of the viewport;
+        // multiplying by devicePixelRatio converts to actual physical pixels so the
+        // canvas resolution matches the display's native resolution exactly.
+        int vpW = EM_ASM_INT({ return Math.round(window.innerWidth  * (window.devicePixelRatio || 1)); });
+        int vpH = EM_ASM_INT({ return Math.round(window.innerHeight * (window.devicePixelRatio || 1)); });
+        if (vpW > 0 && vpH > 0) {
+            videoSettings.windowWidth  = vpW;
+            videoSettings.windowHeight = vpH;
         } else {
             // Fallback: 3x internal resolution
             videoSettings.windowWidth  = videoSettings.pixWidth  * 3;
@@ -476,6 +479,28 @@ void RenderDevice::RefreshWindow()
     Release(true);
 
     SDL_HideWindow(window);
+
+#ifdef __EMSCRIPTEN__
+    // Re-read the current viewport so the canvas always fills the full
+    // browser window at native resolution (like TestUFO).
+    {
+        int vpW = EM_ASM_INT({ return Math.round(window.innerWidth  * (window.devicePixelRatio || 1)); });
+        int vpH = EM_ASM_INT({ return Math.round(window.innerHeight * (window.devicePixelRatio || 1)); });
+        if (vpW > 0 && vpH > 0) {
+            videoSettings.windowWidth  = vpW;
+            videoSettings.windowHeight = vpH;
+        }
+        videoSettings.windowed = true;
+    }
+    SDL_SetWindowSize(window, videoSettings.windowWidth, videoSettings.windowHeight);
+    SDL_ShowWindow(window);
+
+    if (!InitGraphicsAPI() || !InitShaders())
+        return;
+
+    videoSettings.windowState = WINDOWSTATE_ACTIVE;
+    return;
+#endif
 
     if (videoSettings.windowed && videoSettings.bordered)
         SDL_SetWindowBordered(window, SDL_TRUE);
