@@ -22,7 +22,6 @@ add_library(libtheora STATIC
     ${THEORA_DIR}/lib/encfrag.c
     ${THEORA_DIR}/lib/encinfo.c
     ${THEORA_DIR}/lib/encode.c
-    ${THEORA_DIR}/lib/encoder_disabled.c
     ${THEORA_DIR}/lib/enquant.c
     ${THEORA_DIR}/lib/fdct.c
     ${THEORA_DIR}/lib/fragment.c
