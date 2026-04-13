@@ -40,6 +40,7 @@ add_library(libtheora STATIC
 )
 
 target_compile_options(libtheora PRIVATE ${THEORA_FLAGS} -fPIC -sUSE_OGG=1)
+target_link_libraries(libtheora PRIVATE "-sUSE_OGG=1")
 target_include_directories(libtheora PRIVATE ${THEORA_DIR}/include)
 target_include_directories(RetroEngine PRIVATE ${THEORA_DIR}/include)
 
