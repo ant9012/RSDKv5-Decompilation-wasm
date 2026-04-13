@@ -7,7 +7,7 @@ add_executable(RetroEngine ${RETRO_FILES})
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -O3")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O3")
 
-set(COMPILE_THEORA FALSE)
+set(COMPILE_THEORA TRUE)
 set(THEORA_DIR dependencies/all/libtheora)
 
 add_library(libtheora STATIC
@@ -39,14 +39,11 @@ add_library(libtheora STATIC
     ${THEORA_DIR}/lib/tokenize.c
 )
 
-target_compile_options(libtheora PRIVATE ${THEORA_FLAGS} -sUSE_OGG=1)
-target_link_libraries(libtheora PRIVATE "-sUSE_OGG=1")
-
+target_compile_options(libtheora PRIVATE ${THEORA_FLAGS} -fPIC -sUSE_OGG=1)
 target_include_directories(libtheora PRIVATE ${THEORA_DIR}/include)
 target_include_directories(RetroEngine PRIVATE ${THEORA_DIR}/include)
-target_link_libraries(RetroEngine libtheora)
 
-set(EMSCRIPTEN_FLAGS
+set(EMSCRIPTEN_COMPILER_FLAGS
     -sUSE_SDL=2
     -sUSE_OGG=1
     -sUSE_PTHREADS=1
@@ -57,30 +54,39 @@ set(EMSCRIPTEN_FLAGS
     -DRETRO_PLATFORM=5
 )
 
+target_compile_options(RetroEngine PRIVATE ${EMSCRIPTEN_COMPILER_FLAGS})
+
 set(emsc_link_options
-    -sTOTAL_MEMORY=128MB
-    -sALLOW_MEMORY_GROWTH=1
-    -sUSE_SDL=2
-    -sUSE_OGG=1
-    -sFORCE_FILESYSTEM=1
     -sMAIN_MODULE=1
+    -sEXPORT_ALL=1
+    
+    -sALLOW_TABLE_GROWTH=1
+    -sINITIAL_TABLE=200000
+    
+    
+    -sINITIAL_MEMORY=1024MB      # 1GB to prevent memory growth during heavy audio/video loading
+    -sMAXIMUM_MEMORY=2048MB      
+    -sALLOW_MEMORY_GROWTH=1
+    -sSTACK_SIZE=2MB             
+    
     -sUSE_PTHREADS=1
     -sPTHREAD_POOL_SIZE=4
-    "-sEXPORTED_RUNTIME_METHODS=['FS','ccall','cwrap']"
-    "-sEXPORTED_FUNCTIONS=['_main','_RSDK_Initialize','_RSDK_Configure']"
-    -DRSDK_REVISION=3
-    -lm
-    -lidbfs.js
-    -flto
     -pthread
-    -Wl,--whole-archive
-    ${THEORA_LIB}
-    -Wl,--no-whole-archive
+    
+    -sUSE_SDL=2
+    -sUSE_OGG=1
+    
+    -sFORCE_FILESYSTEM=1
+    -lidbfs.js
+    
+    "-sEXPORTED_RUNTIME_METHODS=['FS','ccall','cwrap','getValue','setValue']"
+    "-sEXPORTED_FUNCTIONS=['_main','_RSDK_Initialize','_RSDK_Configure']"
+    
+    -flto
 )
 
-target_compile_options(RetroEngine PRIVATE ${EMSCRIPTEN_FLAGS})
+target_link_libraries(RetroEngine libtheora)
 target_link_options(RetroEngine PRIVATE ${emsc_link_options})
-
 
 set(RETRO_MOD_LOADER TRUE)
 
@@ -91,6 +97,7 @@ if(RETRO_MOD_LOADER)
     )
 endif()
 
+# Force the output to be a JavaScript file, which Emscripten will pair with the .wasm
 set_target_properties(RetroEngine PROPERTIES
     SUFFIX ".js"
 )
