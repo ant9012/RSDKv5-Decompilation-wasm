@@ -7,7 +7,7 @@ add_executable(RetroEngine ${RETRO_FILES})
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -O3")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O3")
 
-set(COMPILE_THEORA TRUE)
+set(COMPILE_THEORA FALSE) # set this to false so that the main CMakeLists compile step doesnt take over.
 set(THEORA_DIR dependencies/all/libtheora)
 
 add_library(libtheora STATIC
