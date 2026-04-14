@@ -73,8 +73,16 @@ void RSDK::Legacy::v4::NativeFunction_StringDispatch(int funcIndex, int32 *param
             break;
             
         case 14: // LoadVideo - index based on AddNativeFunction order
-            if (stringParam && StrLength(stringParam))
-                RSDK::LoadVideo(stringParam, 0.0, nullptr);
+            if (stringParam && StrLength(stringParam)) {
+                // Skip callback: returns true if A, B, or Start is pressed,
+                // which causes ProcessVideo() to stop playback immediately.
+                auto skipCB = []() -> bool32 {
+                    return controller[CONT_ANY].keyA.press
+                        || controller[CONT_ANY].keyB.press
+                        || controller[CONT_ANY].keyStart.press;
+                };
+                RSDK::LoadVideo(stringParam, 0.0, skipCB);
+            }
             break;
             
         default:
