@@ -129,7 +129,7 @@ and after that, you're good to go!
 
 # Getting Shaders to work on web
 
-Extract your Data.rsdk from Sonic Mania using [RetroED](https://github.com/RSDKModding/RetroED) which you can download [here](https://github.com/RSDKModding/RetroED/releases/latest) and extract it (see [here](https://gamebanana.com/tuts/16686#H1_1)), and then download this repo using the download zip button in the Code < > dropdown menu. Copy RSDKv5/Shaders to the root of your Data/ folder. You can upload the Data/ folder as-is, but it isnt against the rules to pack it into a Data.rsdk again. After that, you're good!
+Extract your Data.rsdk from Sonic Mania using [RetroED](https://github.com/RSDKModding/RetroED) which you can download [here](https://github.com/RSDKModding/RetroED/releases/latest) and extract it (see [here](https://gamebanana.com/tuts/16686#H1_1)), and then download this repo using the download zip button in the Code < > dropdown menu. Copy RSDKv5/Shaders to the root of your Data/ folder (not the **CONTENTS** of it but just copy the folder itself). You can upload the Data/ folder as-is, but it isnt against the rules to pack it into a Data.rsdk again. After that, you're good!
 
 
 # Contact:
