@@ -1,6 +1,7 @@
 name: Build RSDKv5
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - stable-web
