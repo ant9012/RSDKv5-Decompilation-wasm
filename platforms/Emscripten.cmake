@@ -4,8 +4,8 @@ project(RetroEngine)
 
 add_executable(RetroEngine ${RETRO_FILES})
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O3")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -O0 -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O0 -g")
 
 set(COMPILE_THEORA FALSE) # set this to false so that the main CMakeLists compile step doesnt take over.
 set(THEORA_DIR dependencies/all/libtheora)
@@ -46,7 +46,6 @@ target_include_directories(RetroEngine PRIVATE ${THEORA_DIR}/include)
 set(EMSCRIPTEN_COMPILER_FLAGS
     -sUSE_SDL=2
     -sUSE_OGG=1
-    -sUSE_PTHREADS=1
     -DRSDK_REVISION=3
     -DRSDK_USE_SDL2=1
     -DRETRO_STANDALONE=1
@@ -69,10 +68,6 @@ set(emsc_link_options
     -sALLOW_MEMORY_GROWTH=1
     -sSTACK_SIZE=2MB             
     
-    -sUSE_PTHREADS=1
-    -sPTHREAD_POOL_SIZE=4
-    -pthread
-    
     -sUSE_SDL=2
     -sUSE_OGG=1
     
@@ -82,7 +77,7 @@ set(emsc_link_options
     "-sEXPORTED_RUNTIME_METHODS=['FS','ccall','cwrap','getValue','setValue']"
     "-sEXPORTED_FUNCTIONS=['_main','_RSDK_Initialize','_RSDK_Configure']"
     
-    -flto
+    -sASSERTIONS=2
 )
 
 target_link_libraries(RetroEngine libtheora)
