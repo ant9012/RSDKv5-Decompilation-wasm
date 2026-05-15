@@ -58,6 +58,9 @@ target_compile_options(RetroEngine PRIVATE ${EMSCRIPTEN_COMPILER_FLAGS})
 set(emsc_link_options
     -sMAIN_MODULE=1
     -sEXPORT_ALL=1
+
+    -sUSE_PTHREADS=0
+
     
     -sALLOW_TABLE_GROWTH=1
     -sINITIAL_TABLE=200000
