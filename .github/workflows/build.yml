@@ -5,7 +5,9 @@ on:
   push:
     branches:
       - stable-web
+      - no-SharedArrayBuffer
 
+      
 env:
   GENERAL_FLAGS: "-DRETRO_DISABLE_PLUS=ON -DCMAKE_BUILD_TYPE=Release"
   V5_FLAGS: "-DRETRO_REVISION=2"
