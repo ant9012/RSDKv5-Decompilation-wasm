@@ -79,8 +79,6 @@ set(emsc_link_options
     
     "-sEXPORTED_RUNTIME_METHODS=['FS','ccall','cwrap','getValue','setValue']"
     "-sEXPORTED_FUNCTIONS=['_main','_RSDK_Initialize','_RSDK_Configure']"
-    
-    -sASSERTIONS=2
 )
 
 target_link_libraries(RetroEngine libtheora)
