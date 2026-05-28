@@ -81,8 +81,6 @@ set(emsc_link_options
     "-sEXPORTED_FUNCTIONS=['_main','_RSDK_Initialize','_RSDK_Configure']"
     
     -sASSERTIONS=2
-
-    -flto
 )
 
 target_link_libraries(RetroEngine libtheora)
