@@ -61,6 +61,8 @@ set(emsc_link_options
 
     -sUSE_PTHREADS=0
 
+    -sASSERTIONS=2
+
     
     -sALLOW_TABLE_GROWTH=1
     -sINITIAL_TABLE=200000
