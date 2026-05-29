@@ -17,14 +17,7 @@ public:
 
     inline static void HandleStreamLoad(ChannelInfo *channel, bool32 async)
     {
-        if (async) {
-            // SDL_CreateThread((SDL_ThreadFunction)LoadStream, "LoadStream", (void *)channel);
-
-            // ... we don't talk about this
-            std::thread thread(LoadStream, channel);
-            thread.detach();
-        }
-        else {
+        // we remove the if/else here because we DONT use threads
             LoadStream(channel);
         }
     }
