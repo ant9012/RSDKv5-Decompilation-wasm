@@ -19,7 +19,6 @@ public:
     {
         // we remove the if/else here because we DONT use threads
             LoadStream(channel);
-        }
     }
 
 private:
